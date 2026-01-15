@@ -2,7 +2,53 @@
 
 네이버밴드 PC버전의 채팅방에 설정한 시간에 따라 주기적으로 글을 자동 포스팅하는 프로그램입니다.
 
-## 주요 기능
+## 🚀 빠른 시작 (Python 없이 실행)
+
+### ⭐ 방법 1: EXE 파일 사용 (추천)
+
+**Python 설치 없이 바로 실행!**
+
+1. **Releases**에서 `네이버밴드_자동포스팅.exe` 다운로드
+2. 더블클릭으로 바로 실행!
+3. GUI에서 설정 입력 후 사용
+
+> 📥 [Releases 페이지에서 다운로드](https://github.com/rpaakdi1-spec/naver-band-auto-poster/releases)
+
+### 방법 2: 원클릭 실행 스크립트
+
+**Python이 설치되어 있다면:**
+
+1. 프로젝트 다운로드
+2. `실행.bat` 더블클릭
+3. 자동으로 필요한 패키지 설치 후 실행!
+
+---
+
+## 💻 수동 설치 (개발자용)
+
+### 시스템 요구사항
+
+- Python 3.8 이상
+- Chrome 브라우저
+- Windows/macOS/Linux
+
+### 설치 방법
+
+```bash
+# 1. 프로젝트 다운로드
+git clone https://github.com/rpaakdi1-spec/naver-band-auto-poster.git
+cd naver-band-auto-poster
+
+# 2. 패키지 설치
+pip install -r requirements.txt
+
+# 3. 실행
+python run.py
+```
+
+---
+
+## 🎯 주요 기능
 
 - 🤖 **자동 로그인**: 네이버 계정 자동 로그인
 - ⏰ **스케줄 포스팅**: 설정한 시간 간격으로 자동 포스팅
@@ -13,62 +59,11 @@
 - 🖥️ **GUI 인터페이스**: 사용하기 쉬운 그래픽 인터페이스
 - 📊 **로깅**: 모든 활동 로그 기록
 
-## 시스템 요구사항
+---
 
-- Python 3.8 이상
-- Chrome 브라우저
-- Windows/macOS/Linux
+## 📖 사용 방법
 
-## 설치 방법
-
-### 1. Python 설치
-
-먼저 Python 3.8 이상이 설치되어 있는지 확인하세요.
-
-```bash
-python --version
-```
-
-### 2. 프로젝트 다운로드
-
-```bash
-git clone <repository-url>
-cd naver-band-auto-poster
-```
-
-### 3. 가상환경 생성 (권장)
-
-```bash
-# Windows
-python -m venv venv
-venv\Scripts\activate
-
-# macOS/Linux
-python3 -m venv venv
-source venv/bin/activate
-```
-
-### 4. 패키지 설치
-
-```bash
-pip install -r requirements.txt
-```
-
-## 사용 방법
-
-### GUI 버전 (권장)
-
-```bash
-python run.py
-```
-
-또는
-
-```bash
-python src/gui.py
-```
-
-### 설정 방법
+### GUI 실행 후
 
 1. **로그인 정보 입력**
    - 네이버 ID
@@ -95,20 +90,48 @@ python src/gui.py
    - "중지" 버튼: 자동 포스팅 중지
    - "수동 실행" 버튼: 즉시 한 번 포스팅
 
-### 커맨드라인 버전
+---
+
+## 🔧 EXE 파일 직접 빌드하기
+
+직접 EXE 파일을 만들고 싶다면:
+
+### Windows에서:
 
 ```bash
-python src/band_poster.py
+# 방법 1: 자동 빌드
+build_exe.bat 더블클릭
+
+# 방법 2: 수동 빌드
+pip install pyinstaller
+pyinstaller --clean --noconfirm build_exe.spec
 ```
 
-설정 파일을 먼저 작성해야 합니다:
+빌드 완료 후 `dist/네이버밴드_자동포스팅.exe` 생성됨
 
-```bash
-cp config/config.example.json config/config.json
-# config/config.json 파일을 편집하여 설정 입력
+자세한 내용: [BUILD_EXE_GUIDE.md](BUILD_EXE_GUIDE.md)
+
+---
+
+## 📁 프로젝트 구조
+
+```
+naver-band-auto-poster/
+├── src/
+│   ├── band_poster.py      # 자동화 엔진
+│   └── gui.py              # GUI 인터페이스
+├── config/
+│   └── config.example.json # 설정 예제
+├── requirements.txt        # 필요 패키지
+├── run.py                  # 실행 스크립트
+├── 실행.bat                # 원클릭 실행 (Windows)
+├── build_exe.bat           # EXE 빌드 스크립트
+└── README.md              # 사용 설명서
 ```
 
-## 설정 파일 구조
+---
+
+## ⚙️ 설정 파일
 
 `config/config.json`:
 
@@ -120,10 +143,6 @@ cp config/config.example.json config/config.json
   "posts": [
     {
       "content": "첫 번째 게시글 내용입니다.",
-      "enabled": true
-    },
-    {
-      "content": "두 번째 게시글 내용입니다.",
       "enabled": true
     }
   ],
@@ -142,52 +161,33 @@ cp config/config.example.json config/config.json
 }
 ```
 
-### 설정 옵션 설명
+---
 
-- **naver_id**: 네이버 아이디
-- **naver_password**: 네이버 비밀번호
-- **band_url**: 밴드 URL
-- **posts**: 포스팅할 내용 리스트
-  - **content**: 게시글 내용
-  - **enabled**: 활성화 여부
-- **schedule**: 스케줄 설정
-  - **interval_minutes**: 포스팅 간격 (분)
-  - **random_delay_minutes**: 랜덤 딜레이 범위 (분)
-  - **start_time**: 포스팅 시작 시간
-  - **end_time**: 포스팅 종료 시간
-- **settings**: 기타 설정
-  - **headless**: 백그라운드 실행 여부
-  - **auto_login**: 자동 로그인 여부
-  - **rotate_posts**: 순환 포스팅 여부 (false면 랜덤)
-  - **log_level**: 로그 레벨 (DEBUG/INFO/WARNING/ERROR)
+## ❓ 문제 해결
 
-## 로그 확인
+### Q: EXE 실행 시 Windows Defender 경고
 
-로그 파일은 `logs/` 디렉토리에 날짜별로 저장됩니다:
+A: "추가 정보" > "실행" 클릭 (안전한 파일입니다)
 
-```
-logs/band_poster_20240115.log
-```
+### Q: Python 설치 없이 사용하고 싶어요
 
-## 문제 해결
+A: Releases에서 EXE 파일 다운로드하거나 직접 빌드하세요
 
-### 로그인 실패
+### Q: tkinter 오류 발생 시
 
-- 네이버 ID/비밀번호가 정확한지 확인
-- 2단계 인증이 설정되어 있다면 임시로 해제
-- CAPTCHA가 나타나는 경우 수동으로 해결 필요
+A: Python 재설치 또는 `sudo apt-get install python3-tk` (Linux)
 
-### 포스팅 실패
+### Q: Chrome Driver 오류
 
-- 밴드 URL이 정확한지 확인
-- 밴드 접근 권한이 있는지 확인
-- 로그 파일에서 자세한 오류 확인
+A: Chrome 브라우저 설치 필요 (자동으로 드라이버 다운로드됨)
 
-### Chrome 드라이버 오류
+### Q: 로그인 실패
 
-프로그램이 자동으로 Chrome 드라이버를 다운로드합니다. 인터넷 연결을 확인하세요.
+A: 네이버 2단계 인증 해제 또는 CAPTCHA 수동 입력
 
-## 주의사항
+---
+
+## ⚠️ 주의사항
 
 ⚠️ **중요**: 이 프로그램은 교육 목적으로 제작되었습니다.
 
@@ -196,19 +196,26 @@ logs/band_poster_20240115.log
 - 적절한 포스팅 간격을 설정하세요 (최소 30분 권장)
 - 로그인 정보는 안전하게 관리하세요
 
-## 라이선스
+---
+
+## 📄 라이선스
 
 MIT License
 
-## 기여
+---
 
-버그 리포트나 기능 제안은 이슈로 등록해주세요.
+## 🤝 기여
 
-## 변경 이력
+버그 리포트나 기능 제안은 [Issues](https://github.com/rpaakdi1-spec/naver-band-auto-poster/issues)에 등록해주세요.
 
-### v1.0.0 (2024-01-15)
+---
+
+## 📝 변경 이력
+
+### v1.0.0 (2026-01-15)
 - 초기 버전 릴리스
 - GUI 인터페이스 추가
 - 자동 로그인 기능
 - 스케줄 포스팅 기능
 - 다중 포스트 관리
+- EXE 빌드 지원 추가
