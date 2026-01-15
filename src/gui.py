@@ -26,6 +26,7 @@ class BandPosterGUI:
         self.poster = None
         self.is_running = False
         self.config_path = "config/config.json"
+        self.posts = []  # 포스트 리스트 초기화
         
         self._create_widgets()
         self._load_config()
@@ -180,8 +181,13 @@ class BandPosterGUI:
                 # 포스트
                 self.posts = config.get('posts', [])
                 self._refresh_posts_list()
+            else:
+                # 설정 파일이 없으면 빈 포스트 리스트 유지
+                self.posts = []
                 
         except Exception as e:
+            # 오류 발생 시 빈 포스트 리스트 유지
+            self.posts = []
             messagebox.showerror("오류", f"설정 로드 실패: {str(e)}")
     
     def _save_config(self):
