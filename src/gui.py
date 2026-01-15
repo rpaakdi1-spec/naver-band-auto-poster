@@ -53,6 +53,7 @@ class BandPosterGUI:
         ttk.Label(login_frame, text="밴드 URL:").grid(row=2, column=0, sticky=tk.W, padx=5)
         self.band_url_entry = ttk.Entry(login_frame, width=50)
         self.band_url_entry.grid(row=2, column=1, columnspan=2, padx=5, pady=2, sticky=(tk.W, tk.E))
+        self.band_url_entry.insert(0, "https://www.band.us/home")  # 기본값 설정
         
         # 스케줄 설정
         schedule_frame = ttk.LabelFrame(main_frame, text="스케줄 설정", padding="10")
@@ -157,7 +158,11 @@ class BandPosterGUI:
                 # 로그인 정보
                 self.id_entry.insert(0, config.get('naver_id', ''))
                 self.pw_entry.insert(0, config.get('naver_password', ''))
-                self.band_url_entry.insert(0, config.get('band_url', ''))
+                
+                # 밴드 URL - 설정 파일에 값이 있으면 기본값 덮어쓰기
+                if config.get('band_url'):
+                    self.band_url_entry.delete(0, tk.END)
+                    self.band_url_entry.insert(0, config.get('band_url'))
                 
                 # 스케줄
                 schedule = config.get('schedule', {})
