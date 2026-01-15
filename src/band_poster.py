@@ -81,8 +81,29 @@ class NaverBandPoster:
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
         chrome_options.add_experimental_option('useAutomationExtension', False)
         
-        service = Service(ChromeDriverManager().install())
-        self.driver = webdriver.Chrome(service=service, options=chrome_options)
+        # ChromeDriverManager 캐시 문제 해결
+        try:
+            # 캐시 디렉토리를 명시적으로 지정하고 최신 버전 강제 다운로드
+            driver_path = ChromeDriverManager(cache_valid_range=1).install()
+            
+            # 잘못된 파일 경로 수정 (THIRD_PARTY_NOTICES 문제 해결)
+            if 'THIRD_PARTY_NOTICES' in driver_path:
+                import os
+                driver_dir = os.path.dirname(driver_path)
+                # chromedriver.exe 찾기
+                if os.path.exists(os.path.join(driver_dir, 'chromedriver.exe')):
+                    driver_path = os.path.join(driver_dir, 'chromedriver.exe')
+                elif os.path.exists(os.path.join(os.path.dirname(driver_dir), 'chromedriver.exe')):
+                    driver_path = os.path.join(os.path.dirname(driver_dir), 'chromedriver.exe')
+            
+            service = Service(driver_path)
+            self.driver = webdriver.Chrome(service=service, options=chrome_options)
+        except Exception as e:
+            self.logger.error(f"ChromeDriverManager 오류: {str(e)}")
+            self.logger.info("Selenium Manager로 자동 설치 시도 중...")
+            # Selenium 4.6+ 의 자동 드라이버 관리 사용
+            self.driver = webdriver.Chrome(options=chrome_options)
+        
         self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
         
         self.logger.info("크롬 드라이버 초기화 완료")

@@ -185,6 +185,29 @@ A: Python 재설치 또는 `sudo apt-get install python3-tk` (Linux)
 
 A: Chrome 브라우저 설치 필요 (자동으로 드라이버 다운로드됨)
 
+### Q: [WinError 193] Win32 응용 프로그램 오류 ⚠️ 중요
+
+**증상**: `[WinError 193] %1은(는) 올바른 Win32 응용 프로그램이 아닙니다`
+
+**원인**: WebDriver Manager 캐시 손상
+
+**해결 방법** (아래 중 하나 선택):
+
+1. **자동 정리 (추천)**
+   ```bash
+   # Python 스크립트 실행
+   python clear_cache.py
+   
+   # 또는 배치 파일 더블클릭
+   clear_cache.bat
+   ```
+
+2. **수동 정리**
+   - Windows 탐색기에서 `C:\Users\사용자명\.wdm` 폴더 삭제
+   - 프로그램 재실행
+
+3. **자세한 가이드**: [CHROMEDRIVER_FIX.md](CHROMEDRIVER_FIX.md) 참조
+
 ### Q: 로그인 실패
 
 A: 네이버 2단계 인증 해제 또는 CAPTCHA 수동 입력
