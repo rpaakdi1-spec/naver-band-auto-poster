@@ -43,14 +43,14 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='네이버밴드_자동포스팅',
+    name='NaverBandAutoPoster',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=False,  # GUI 모드
+    console=False,  # GUI mode
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
