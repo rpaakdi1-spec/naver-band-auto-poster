@@ -81,31 +81,88 @@ class NaverBandPoster:
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
         chrome_options.add_experimental_option('useAutomationExtension', False)
         
-        # ChromeDriverManager 캐시 문제 해결
+        # ChromeDriverManager 캐시 문제 해결 - 강화된 버전
+        driver_initialized = False
+        
+        # 방법 1: ChromeDriverManager 사용 시도
         try:
-            # 캐시 디렉토리를 명시적으로 지정하고 최신 버전 강제 다운로드
+            self.logger.info("ChromeDriverManager로 드라이버 설치 시도...")
             driver_path = ChromeDriverManager(cache_valid_range=1).install()
             
             # 잘못된 파일 경로 수정 (THIRD_PARTY_NOTICES 문제 해결)
-            if 'THIRD_PARTY_NOTICES' in driver_path:
+            if 'THIRD_PARTY_NOTICES' in driver_path or not driver_path.endswith('.exe'):
+                self.logger.warning(f"잘못된 드라이버 경로 감지: {driver_path}")
                 import os
-                driver_dir = os.path.dirname(driver_path)
-                # chromedriver.exe 찾기
-                if os.path.exists(os.path.join(driver_dir, 'chromedriver.exe')):
-                    driver_path = os.path.join(driver_dir, 'chromedriver.exe')
-                elif os.path.exists(os.path.join(os.path.dirname(driver_dir), 'chromedriver.exe')):
-                    driver_path = os.path.join(os.path.dirname(driver_dir), 'chromedriver.exe')
+                import glob
+                
+                # 상위 디렉토리에서 chromedriver.exe 찾기
+                base_dir = os.path.dirname(os.path.dirname(driver_path))
+                
+                # 여러 경로 패턴 시도
+                search_patterns = [
+                    os.path.join(base_dir, 'chromedriver.exe'),
+                    os.path.join(base_dir, 'chromedriver-win32', 'chromedriver.exe'),
+                    os.path.join(os.path.dirname(driver_path), 'chromedriver.exe'),
+                ]
+                
+                # glob으로 재귀 검색
+                search_patterns.extend(glob.glob(os.path.join(base_dir, '**', 'chromedriver.exe'), recursive=True))
+                
+                driver_path = None
+                for pattern in search_patterns:
+                    if os.path.exists(pattern) and os.path.isfile(pattern):
+                        driver_path = pattern
+                        self.logger.info(f"올바른 드라이버 발견: {driver_path}")
+                        break
+                
+                if not driver_path:
+                    raise FileNotFoundError("chromedriver.exe를 찾을 수 없습니다")
             
+            self.logger.info(f"드라이버 경로: {driver_path}")
             service = Service(driver_path)
             self.driver = webdriver.Chrome(service=service, options=chrome_options)
+            driver_initialized = True
+            self.logger.info("ChromeDriverManager로 드라이버 초기화 성공")
+            
         except Exception as e:
-            self.logger.error(f"ChromeDriverManager 오류: {str(e)}")
-            self.logger.info("Selenium Manager로 자동 설치 시도 중...")
-            # Selenium 4.6+ 의 자동 드라이버 관리 사용
-            self.driver = webdriver.Chrome(options=chrome_options)
+            self.logger.error(f"ChromeDriverManager 실패: {str(e)}")
+        
+        # 방법 2: Selenium Manager 사용 (Selenium 4.6+)
+        if not driver_initialized:
+            try:
+                self.logger.info("Selenium Manager로 자동 설치 시도...")
+                self.driver = webdriver.Chrome(options=chrome_options)
+                driver_initialized = True
+                self.logger.info("Selenium Manager로 드라이버 초기화 성공")
+            except Exception as e:
+                self.logger.error(f"Selenium Manager 실패: {str(e)}")
+        
+        # 방법 3: 캐시 자동 정리 후 재시도
+        if not driver_initialized:
+            try:
+                self.logger.warning("모든 방법 실패. 캐시 정리 후 재시도...")
+                import shutil
+                cache_dir = os.path.expanduser("~/.wdm")
+                if os.path.exists(cache_dir):
+                    self.logger.info(f"캐시 삭제: {cache_dir}")
+                    shutil.rmtree(cache_dir)
+                
+                # 캐시 정리 후 ChromeDriverManager 재시도
+                driver_path = ChromeDriverManager().install()
+                service = Service(driver_path)
+                self.driver = webdriver.Chrome(service=service, options=chrome_options)
+                driver_initialized = True
+                self.logger.info("캐시 정리 후 드라이버 초기화 성공")
+            except Exception as e:
+                self.logger.error(f"캐시 정리 후 재시도 실패: {str(e)}")
+                raise RuntimeError(
+                    "ChromeDriver 초기화 실패. 다음을 시도하세요:\n"
+                    "1. 긴급수정_실행.bat 실행\n"
+                    "2. C:\\Users\\사용자명\\.wdm 폴더 수동 삭제 후 재실행\n"
+                    "3. Chrome 브라우저 최신 버전 업데이트"
+                ) from e
         
         self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-        
         self.logger.info("크롬 드라이버 초기화 완료")
     
     def login(self) -> bool:

@@ -191,9 +191,18 @@ A: Chrome 브라우저 설치 필요 (자동으로 드라이버 다운로드됨)
 
 **원인**: WebDriver Manager 캐시 손상
 
+**🚀 즉시 해결 (추천)**:
+```cmd
+긴급수정_실행.bat 더블클릭
+```
+
 **해결 방법** (아래 중 하나 선택):
 
-1. **자동 정리 (추천)**
+1. **원클릭 수정 (최우선 추천)** ⭐⭐⭐
+   - `긴급수정_실행.bat` 파일 더블클릭
+   - 자동으로 캐시 정리 → 프로그램 재시작
+
+2. **자동 정리 스크립트**
    ```bash
    # Python 스크립트 실행
    python clear_cache.py
@@ -202,11 +211,17 @@ A: Chrome 브라우저 설치 필요 (자동으로 드라이버 다운로드됨)
    clear_cache.bat
    ```
 
-2. **수동 정리**
+3. **수동 정리**
    - Windows 탐색기에서 `C:\Users\사용자명\.wdm` 폴더 삭제
    - 프로그램 재실행
 
-3. **자세한 가이드**: [CHROMEDRIVER_FIX.md](CHROMEDRIVER_FIX.md) 참조
+4. **자세한 가이드**: [CHROMEDRIVER_FIX.md](CHROMEDRIVER_FIX.md) 참조
+
+**최신 코드 사용 중이라면**:
+- 프로그램이 자동으로 3가지 방법 시도
+- 1) ChromeDriverManager 자동 수정
+- 2) Selenium Manager 폴백
+- 3) 캐시 자동 정리 후 재시도
 
 ### Q: 로그인 실패
 
