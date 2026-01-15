@@ -1,5 +1,9 @@
 # 네이버밴드 자동 포스팅 프로그램
 
+[![Build Windows EXE](https://github.com/rpaakdi1-spec/naver-band-auto-poster/actions/workflows/build-exe.yml/badge.svg)](https://github.com/rpaakdi1-spec/naver-band-auto-poster/actions/workflows/build-exe.yml)
+[![GitHub release](https://img.shields.io/github/v/release/rpaakdi1-spec/naver-band-auto-poster)](https://github.com/rpaakdi1-spec/naver-band-auto-poster/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 네이버밴드 PC버전의 채팅방에 설정한 시간에 따라 주기적으로 글을 자동 포스팅하는 프로그램입니다.
 
 ## 🚀 빠른 시작 (Python 없이 실행)

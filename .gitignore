@@ -46,3 +46,6 @@ chromedriver*
 # OS
 .DS_Store
 Thumbs.db
+build_log.txt
+build/
+dist/
