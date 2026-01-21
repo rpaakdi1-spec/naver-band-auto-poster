@@ -1,74 +1,74 @@
 @echo off
 chcp 65001 > nul
-title ë„¤ì´ë²„ë°´ë“œ ì•ˆì „ ë§¤í¬ë¡œ ì‹¤í–‰
+title ³×ÀÌ¹ö¹êµå ¾ÈÀü ¸ÅÅ©·Î ½ÇÇà
 
 echo ============================================================
-echo ë„¤ì´ë²„ë°´ë“œ ì•ˆì „ íƒ€ì´í•‘ ë§¤í¬ë¡œ
+echo ³×ÀÌ¹ö¹êµå ¾ÈÀü Å¸ÀÌÇÎ ¸ÅÅ©·Î
 echo ============================================================
 echo.
 
-REM Python í™•ì¸
+REM Python È®ÀÎ
 python --version >nul 2>&1
 if errorlevel 1 (
-    echo âŒ Pythonì´ ì„¤ì¹˜ë˜ì–´ ìžˆì§€ ì•ŠìŠµë‹ˆë‹¤.
-    echo https://www.python.org/downloads/ ì—ì„œ ë‹¤ìš´ë¡œë“œí•˜ì„¸ìš”.
+    echo [¿À·ù] PythonÀÌ ¼³Ä¡µÇ¾î ÀÖÁö ¾Ê½À´Ï´Ù.
+    echo https://www.python.org/downloads/ ¿¡¼­ ´Ù¿î·ÎµåÇÏ¼¼¿ä.
     pause
     exit /b 1
 )
 
-echo âœ… Python ì„¤ì¹˜ í™•ì¸
+echo [È®ÀÎ] Python ¼³Ä¡ È®ÀÎ
 python --version
 echo.
 
-REM íŒ¨í‚¤ì§€ í™•ì¸ ë° ì„¤ì¹˜
-echo ðŸ“¦ í•„ìš”í•œ íŒ¨í‚¤ì§€ í™•ì¸ ì¤‘...
+REM ÆÐÅ°Áö È®ÀÎ ¹× ¼³Ä¡
+echo [È®ÀÎ] ÇÊ¿äÇÑ ÆÐÅ°Áö È®ÀÎ Áß...
 pip show selenium >nul 2>&1
 if errorlevel 1 (
-    echo selenium ì„¤ì¹˜ ì¤‘...
+    echo selenium ¼³Ä¡ Áß...
     pip install selenium webdriver-manager
 )
 
 pip show pyperclip >nul 2>&1
 if errorlevel 1 (
-    echo pyperclip ì„¤ì¹˜ ì¤‘...
+    echo pyperclip ¼³Ä¡ Áß...
     pip install pyperclip
 )
 
-echo âœ… íŒ¨í‚¤ì§€ í™•ì¸ ì™„ë£Œ
+echo [¿Ï·á] ÆÐÅ°Áö È®ÀÎ ¿Ï·á
 echo.
 
-REM Chrome ë””ë²„ê¹… ëª¨ë“œ í™•ì¸
-echo ðŸ” Chrome ë””ë²„ê¹… ëª¨ë“œ í™•ì¸ ì¤‘...
+REM Chrome µð¹ö±ë ¸ðµå È®ÀÎ
+echo [È®ÀÎ] Chrome µð¹ö±ë ¸ðµå È®ÀÎ Áß...
 curl -s http://127.0.0.1:9222/json/version >nul 2>&1
 if errorlevel 1 (
     echo.
-    echo âš ï¸ Chromeì´ ë””ë²„ê¹… ëª¨ë“œë¡œ ì‹¤í–‰ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤!
+    echo [°æ°í] ChromeÀÌ µð¹ö±ë ¸ðµå·Î ½ÇÇàµÇÁö ¾Ê¾Ò½À´Ï´Ù!
     echo.
-    echo ë¨¼ì € ë‹¤ìŒ ëª…ë ¹ìœ¼ë¡œ Chromeì„ ì‹¤í–‰í•´ì•¼ í•©ë‹ˆë‹¤:
+    echo ¸ÕÀú ´ÙÀ½ ¸í·ÉÀ¸·Î ChromeÀ» ½ÇÇàÇØ¾ß ÇÕ´Ï´Ù:
     echo.
     echo start_chrome_debug.bat
     echo.
-    echo ë˜ëŠ” ìˆ˜ë™ìœ¼ë¡œ:
+    echo ¶Ç´Â ¼öµ¿À¸·Î:
     echo chrome.exe --remote-debugging-port=9222 --user-data-dir="C:\chrome_dev_session"
     echo.
     pause
     exit /b 1
 )
 
-echo âœ… Chrome ë””ë²„ê¹… ëª¨ë“œ ì‹¤í–‰ í™•ì¸
+echo [È®ÀÎ] Chrome µð¹ö±ë ¸ðµå ½ÇÇà Áß
 echo.
 
 :MENU
 echo ============================================================
-echo ì‹¤í–‰ ëª¨ë“œ ì„ íƒ
+echo ½ÇÇà ¸ðµå ¼±ÅÃ
 echo ============================================================
 echo.
-echo 1. í…ŒìŠ¤íŠ¸ ëª¨ë“œ (1íšŒë§Œ ì‹¤í–‰, ìˆ˜ë™ Enter)
-echo 2. ì—°ì† ì „ì†¡ ëª¨ë“œ (ìžë™ ë°˜ë³µ)
-echo 3. í…ŒìŠ¤íŠ¸ ëª¨ë“œ (ìžë™ ì „ì†¡ - ìœ„í—˜!)
-echo 4. ì¢…ë£Œ
+echo 1. Å×½ºÆ® ¸ðµå (1È¸¸¸ ½ÇÇà, ¼öµ¿ Enter)
+echo 2. ¿¬¼Ó Àü¼Û ¸ðµå (ÀÚµ¿ ¹Ýº¹)
+echo 3. Å×½ºÆ® ¸ðµå (ÀÚµ¿ Àü¼Û - À§Çè!)
+echo 4. Á¾·á
 echo.
-choice /C 1234 /N /M "ì„ íƒí•˜ì„¸ìš” (1-4): "
+choice /C 1234 /N /M "¼±ÅÃÇÏ¼¼¿ä (1-4): "
 
 if errorlevel 4 goto END
 if errorlevel 3 goto AUTO_TEST
@@ -77,16 +77,16 @@ if errorlevel 1 goto TEST
 
 :TEST
 echo.
-echo ðŸ§ª í…ŒìŠ¤íŠ¸ ëª¨ë“œ ì‹¤í–‰ (ìˆ˜ë™ ì „ì†¡)
+echo [½ÇÇà] Å×½ºÆ® ¸ðµå ½ÇÇà (¼öµ¿ Àü¼Û)
 echo.
 python src/safe_band_macro.py --test
 goto MENU
 
 :AUTO_TEST
 echo.
-echo âš ï¸ ìžë™ ì „ì†¡ í…ŒìŠ¤íŠ¸ ëª¨ë“œ (ìœ„í—˜!)
+echo [°æ°í] ÀÚµ¿ Àü¼Û Å×½ºÆ® ¸ðµå (À§Çè!)
 echo.
-set /P CONFIRM="ì •ë§ ì‹¤í–‰í•˜ì‹œê² ìŠµë‹ˆê¹Œ? (y/N): "
+set /P CONFIRM="Á¤¸» ½ÇÇàÇÏ½Ã°Ú½À´Ï±î? (y/N): "
 if /I not "%CONFIRM%"=="y" goto MENU
 echo.
 python src/safe_band_macro.py --test --auto-send
@@ -94,21 +94,21 @@ goto MENU
 
 :CONTINUOUS
 echo.
-echo ðŸ”„ ì—°ì† ì „ì†¡ ëª¨ë“œ
+echo [½ÇÇà] ¿¬¼Ó Àü¼Û ¸ðµå
 echo.
-set /P INTERVAL="ì „ì†¡ ê°„ê²©(ë¶„, ê¸°ë³¸ 5): "
+set /P INTERVAL="Àü¼Û °£°Ý(ºÐ, ±âº» 5): "
 if "%INTERVAL%"=="" set INTERVAL=5
 
-set /P MAXSENDS="ìµœëŒ€ ì „ì†¡ íšŸìˆ˜(ê¸°ë³¸ 20): "
+set /P MAXSENDS="ÃÖ´ë Àü¼Û È½¼ö(±âº» 20): "
 if "%MAXSENDS%"=="" set MAXSENDS=20
 
-set /P AUTOSEND="ìžë™ ì „ì†¡? (y/N, ê¸°ë³¸ N): "
+set /P AUTOSEND="ÀÚµ¿ Àü¼Û? (y/N, ±âº» N): "
 
 echo.
-echo ðŸ“‹ ì„¤ì •:
-echo    - ê°„ê²©: %INTERVAL%ë¶„
-echo    - ìµœëŒ€: %MAXSENDS%íšŒ
-echo    - ìžë™: %AUTOSEND%
+echo [¼³Á¤]
+echo    - °£°Ý: %INTERVAL%ºÐ
+echo    - ÃÖ´ë: %MAXSENDS%È¸
+echo    - ÀÚµ¿: %AUTOSEND%
 echo.
 
 if /I "%AUTOSEND%"=="y" (
@@ -120,6 +120,6 @@ goto MENU
 
 :END
 echo.
-echo í”„ë¡œê·¸ëž¨ì„ ì¢…ë£Œí•©ë‹ˆë‹¤.
+echo ÇÁ·Î±×·¥À» Á¾·áÇÕ´Ï´Ù.
 echo.
 pause
