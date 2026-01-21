@@ -15,16 +15,22 @@
 - 한글 입력 완벽 지원
 - 메시지 자동 변형 (스팸 방지)
 
-📖 [안전 매크로 사용 가이드](SAFE_MACRO_GUIDE.md)
+📖 [안전 매크로 사용 가이드](SAFE_MACRO_GUIDE.md) | [PowerShell 솔루션](POWERSHELL_SOLUTION.md)
 
-### 빠른 시작:
-```bash
-# 1. Chrome 디버깅 모드로 실행
-start_chrome_debug.bat
+### 🚀 빠른 시작 (PowerShell 권장):
 
-# 2. 매크로 실행
-python src/safe_band_macro.py --test
+```powershell
+# 방법 1: PowerShell (한글 완벽 지원)
+.\Start-ChromeDebug.ps1    # Chrome 디버깅 모드
+.\Start-SafeMacro.ps1      # 매크로 실행
+
+# 방법 2: 배치 파일 (영어 버전)
+start_chrome_debug_en.bat  # Chrome 디버깅 모드
+python src/safe_band_macro.py --test  # 매크로 실행
 ```
+
+> ⚠️ **참고**: 한글 배치 파일(.bat)은 인코딩 문제가 있을 수 있습니다. 
+> PowerShell 스크립트(.ps1) 사용을 권장합니다!
 
 ---
 
