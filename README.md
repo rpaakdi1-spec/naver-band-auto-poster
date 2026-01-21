@@ -6,6 +6,28 @@
 
 네이버밴드 PC버전의 채팅방에 설정한 시간에 따라 주기적으로 글을 자동 포스팅하는 프로그램입니다.
 
+## ✨ 새로운 기능: 안전 타이핑 매크로
+
+**Chrome 디버깅 모드를 활용한 더 안전한 매크로!**
+
+- 기존 로그인 세션 활용
+- 자연스러운 타이핑 시뮬레이션
+- 한글 입력 완벽 지원
+- 메시지 자동 변형 (스팸 방지)
+
+📖 [안전 매크로 사용 가이드](SAFE_MACRO_GUIDE.md)
+
+### 빠른 시작:
+```bash
+# 1. Chrome 디버깅 모드로 실행
+start_chrome_debug.bat
+
+# 2. 매크로 실행
+python src/safe_band_macro.py --test
+```
+
+---
+
 ## 🚀 빠른 시작 (Python 없이 실행)
 
 ### ⭐ 방법 1: EXE 파일 사용 (추천)
@@ -54,6 +76,7 @@ python run.py
 
 ## 🎯 주요 기능
 
+### 기본 자동 포스팅
 - 🤖 **자동 로그인**: 네이버 계정 자동 로그인
 - ⏰ **스케줄 포스팅**: 설정한 시간 간격으로 자동 포스팅
 - 📝 **다중 포스트 관리**: 여러 개의 포스팅 내용을 등록하고 관리
@@ -62,6 +85,13 @@ python run.py
 - 🎲 **랜덤 딜레이**: 자연스러운 포스팅을 위한 랜덤 딜레이
 - 🖥️ **GUI 인터페이스**: 사용하기 쉬운 그래픽 인터페이스
 - 📊 **로깅**: 모든 활동 로그 기록
+
+### 🆕 안전 타이핑 매크로 (New!)
+- 🔐 **기존 세션 활용**: Chrome 디버깅 모드로 로그인 유지
+- ⌨️ **자연스러운 타이핑**: 사람처럼 타이핑하여 자동화 감지 방지
+- 🇰🇷 **한글 완벽 지원**: pyperclip을 통한 안정적인 한글 입력
+- 🔄 **메시지 변형**: 스팸 방지를 위한 자동 메시지 변형
+- 🛡️ **안전 모드**: 수동 전송 옵션으로 안전하게 사용
 
 ---
 
@@ -123,14 +153,19 @@ pyinstaller --clean --noconfirm build_exe.spec
 naver-band-auto-poster/
 ├── src/
 │   ├── band_poster.py      # 자동화 엔진
-│   └── gui.py              # GUI 인터페이스
+│   ├── gui.py              # GUI 인터페이스
+│   └── safe_band_macro.py  # 🆕 안전 타이핑 매크로
 ├── config/
 │   └── config.example.json # 설정 예제
+├── examples_safe_macro.py  # 🆕 매크로 사용 예시
 ├── requirements.txt        # 필요 패키지
 ├── run.py                  # 실행 스크립트
+├── start_chrome_debug.bat  # 🆕 Chrome 디버깅 모드 실행
+├── run_safe_macro.bat      # 🆕 안전 매크로 실행
 ├── 실행.bat                # 원클릭 실행 (Windows)
 ├── build_exe.bat           # EXE 빌드 스크립트
-└── README.md              # 사용 설명서
+├── README.md              # 사용 설명서
+└── SAFE_MACRO_GUIDE.md    # 🆕 안전 매크로 가이드
 ```
 
 ---
@@ -215,6 +250,17 @@ MIT License
 ---
 
 ## 📝 변경 이력
+
+### v1.1.0 (2026-01-21)
+- 🆕 **안전 타이핑 매크로 추가**
+  - Chrome 디버깅 모드 지원
+  - 기존 로그인 세션 활용
+  - 자연스러운 타이핑 시뮬레이션
+  - 한글 입력 완벽 지원 (pyperclip)
+  - 메시지 자동 변형 기능
+- 📝 사용 예시 스크립트 추가 (examples_safe_macro.py)
+- 🚀 Chrome 디버깅 모드 실행 스크립트 추가
+- 📖 상세 가이드 문서 추가 (SAFE_MACRO_GUIDE.md)
 
 ### v1.0.0 (2026-01-15)
 - 초기 버전 릴리스
