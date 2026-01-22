@@ -20,7 +20,7 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual Environment
+# 가상환경
 venv/
 ENV/
 env/
@@ -32,20 +32,13 @@ env/
 *.swo
 *~
 
-# Project specific
-config/*.json
-!config/config.example.json
-logs/*.log
-data/*.json
-data/*.txt
-.env
+# 설정 파일 (비밀번호 포함)
+config/config.json
 
-# Chrome Driver
-chromedriver*
+# 로그
+logs/
+*.log
 
 # OS
 .DS_Store
 Thumbs.db
-build_log.txt
-build/
-dist/

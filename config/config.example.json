@@ -1,14 +1,10 @@
 {
-  "naver_id": "your_naver_id",
-  "naver_password": "your_naver_password",
+  "naver_id": "",
+  "naver_password": "",
   "band_url": "https://band.us/band/xxxxx",
   "posts": [
     {
       "content": "첫 번째 게시글 내용입니다.",
-      "enabled": true
-    },
-    {
-      "content": "두 번째 게시글 내용입니다.",
       "enabled": true
     }
   ],
@@ -19,8 +15,6 @@
     "end_time": "22:00"
   },
   "settings": {
-    "headless": false,
-    "auto_login": true,
     "rotate_posts": true,
     "log_level": "INFO"
   }

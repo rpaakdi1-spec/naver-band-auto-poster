@@ -1,5 +1,0 @@
-# Windows batch files should be checked out with CRLF
-*.bat text eol=crlf
-
-# Prevent Git from converting encoding
-*.bat -text
