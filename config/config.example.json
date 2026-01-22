@@ -1,6 +1,9 @@
 {
-  "band_url": "https://band.us/band/xxxxx",
-  "_comment_band_url": "포스팅할 밴드 URL",
+  "chat_urls": [
+    "https://www.band.us/band/54748329/chat/CevDKF",
+    "https://www.band.us/band/50213411/chat/CiD8Bg"
+  ],
+  "_comment_chat_urls": "포스팅할 채팅방 URL 목록",
   "posts": [
     {
       "content": "첫 번째 게시글 내용입니다.",
@@ -15,6 +18,9 @@
   },
   "settings": {
     "rotate_posts": true,
-    "log_level": "INFO"
+    "rotate_chats": true,
+    "log_level": "INFO",
+    "wait_after_post": 2,
+    "wait_between_chats": 3
   }
 }

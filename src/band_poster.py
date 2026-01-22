@@ -1,5 +1,5 @@
 """
-네이버밴드 자동 포스팅 엔진
+네이버밴드 자동 포스팅 엔진 (다중 채팅방 지원)
 """
 
 import os
@@ -13,22 +13,24 @@ from typing import List, Dict, Optional
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from webdriver_manager.chrome import ChromeDriverManager
 
 
 class BandPoster:
-    """네이버밴드 자동 포스팅 클래스"""
+    """네이버밴드 자동 포스팅 클래스 (다중 채팅방)"""
     
     def __init__(self, config_path: str = "config/config.json"):
         self.config_path = config_path
         self.config = self._load_config()
         self.driver = None
         self.current_post_index = 0
+        self.current_chat_index = 0
         self.is_logged_in = False
         self._setup_logging()
         
@@ -60,7 +62,7 @@ class BandPoster:
     def _get_default_config(self) -> Dict:
         """기본 설정 반환"""
         return {
-            "band_url": "",
+            "chat_urls": [],
             "posts": [],
             "schedule": {
                 "interval_minutes": 30,
@@ -70,7 +72,10 @@ class BandPoster:
             },
             "settings": {
                 "rotate_posts": True,
-                "log_level": "INFO"
+                "rotate_chats": True,
+                "log_level": "INFO",
+                "wait_after_post": 2,
+                "wait_between_chats": 3
             }
         }
     
@@ -89,8 +94,8 @@ class BandPoster:
             chrome_options.add_argument('--disable-dev-shm-usage')
             chrome_options.add_argument('--disable-blink-features=AutomationControlled')
             chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
-            chrome_options.add_argument('--log-level=3')  # 에러 메시지 숨기기 (FATAL만 표시)
-            chrome_options.add_argument('--disable-logging')  # Chrome 로깅 비활성화
+            chrome_options.add_argument('--log-level=3')
+            chrome_options.add_argument('--disable-logging')
             chrome_options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
             chrome_options.add_experimental_option('useAutomationExtension', False)
             
@@ -99,8 +104,6 @@ class BandPoster:
             
             # 올바른 chromedriver.exe 경로 찾기
             if not driver_path.endswith('.exe'):
-                # 디렉토리에서 chromedriver.exe 찾기
-                import glob
                 driver_dir = os.path.dirname(driver_path)
                 exe_files = glob.glob(os.path.join(driver_dir, '**', 'chromedriver.exe'), recursive=True)
                 
@@ -108,7 +111,6 @@ class BandPoster:
                     driver_path = exe_files[0]
                     self.logger.info(f"ChromeDriver 경로: {driver_path}")
                 else:
-                    # 상위 디렉토리에서 찾기
                     parent_dir = os.path.dirname(driver_dir)
                     exe_files = glob.glob(os.path.join(parent_dir, '**', 'chromedriver.exe'), recursive=True)
                     if exe_files:
@@ -132,11 +134,8 @@ class BandPoster:
         try:
             self.logger.info("Chrome 브라우저 실행 중...")
             
-            # 밴드 URL이 있으면 밴드 페이지로, 없으면 밴드 메인으로
-            if self.config.get('band_url'):
-                self.driver.get(self.config['band_url'])
-            else:
-                self.driver.get("https://band.us")
+            # 밴드 메인 페이지로 이동
+            self.driver.get("https://band.us")
             
             self.logger.info("=" * 60)
             self.logger.info("🌐 Chrome 브라우저가 실행되었습니다")
@@ -163,84 +162,79 @@ class BandPoster:
             self.logger.error(f"Chrome 실행 중 오류: {str(e)}")
             return False
     
-    def navigate_to_band(self) -> bool:
-        """밴드 페이지로 이동"""
+    def post_to_chat(self, chat_url: str, content: str) -> bool:
+        """특정 채팅방에 메시지 포스팅"""
         try:
-            self.logger.info(f"밴드 페이지 이동: {self.config['band_url']}")
-            self.driver.get(self.config['band_url'])
-            time.sleep(3)
-            return True
-        except Exception as e:
-            self.logger.error(f"밴드 페이지 이동 실패: {str(e)}")
-            return False
-    
-    def post_message(self, content: str) -> bool:
-        """메시지 포스팅"""
-        try:
-            self.logger.info(f"포스팅 시작: {content[:50]}...")
+            self.logger.info(f"📨 채팅방 이동: {chat_url}")
             
-            if not self.navigate_to_band():
-                return False
+            # 채팅방 URL로 이동
+            self.driver.get(chat_url)
+            time.sleep(self.config['settings'].get('wait_between_chats', 3))
             
-            # 글쓰기 영역 찾기
-            write_selectors = [
-                "//textarea[@placeholder='게시글을 작성해보세요.']",
-                "//textarea[contains(@class, 'writeForm')]",
-                "//div[contains(@class, 'writeFormBtn')]"
+            # 채팅 입력창 찾기 (여러 선택자 시도)
+            input_selectors = [
+                "//textarea[@placeholder='메시지를 입력하세요']",
+                "//textarea[contains(@class, 'chatInput')]",
+                "//div[@contenteditable='true']",
+                "//textarea[contains(@placeholder, '메시지')]",
+                "//input[@type='text' and contains(@placeholder, '메시지')]"
             ]
             
-            write_element = None
-            for selector in write_selectors:
+            input_element = None
+            for selector in input_selectors:
                 try:
-                    write_element = WebDriverWait(self.driver, 5).until(
+                    input_element = WebDriverWait(self.driver, 10).until(
                         EC.presence_of_element_located((By.XPATH, selector))
                     )
-                    if write_element:
+                    if input_element:
+                        self.logger.info(f"✅ 입력창 찾음: {selector}")
                         break
                 except TimeoutException:
                     continue
             
-            if not write_element:
-                self.logger.error("글쓰기 영역을 찾을 수 없습니다")
+            if not input_element:
+                self.logger.error("❌ 채팅 입력창을 찾을 수 없습니다")
                 return False
             
-            # 글쓰기 영역 클릭
-            write_element.click()
+            # 입력창 클릭
+            input_element.click()
+            time.sleep(0.5)
+            
+            # 메시지 입력
+            input_element.send_keys(content)
             time.sleep(1)
             
-            # 본문 입력
-            write_element.send_keys(content)
-            time.sleep(1)
-            
-            # 등록 버튼 찾기 및 클릭
-            submit_selectors = [
-                "//button[contains(text(), '등록')]",
-                "//button[contains(@class, 'submit')]"
+            # Enter 키로 전송 또는 전송 버튼 클릭
+            send_button_selectors = [
+                "//button[contains(text(), '전송')]",
+                "//button[contains(@class, 'sendBtn')]",
+                "//button[@type='submit']"
             ]
             
-            submit_element = None
-            for selector in submit_selectors:
+            send_button = None
+            for selector in send_button_selectors:
                 try:
-                    submit_element = WebDriverWait(self.driver, 5).until(
-                        EC.element_to_be_clickable((By.XPATH, selector))
-                    )
-                    if submit_element:
+                    send_button = self.driver.find_element(By.XPATH, selector)
+                    if send_button and send_button.is_displayed():
+                        self.logger.info(f"✅ 전송 버튼 찾음: {selector}")
                         break
-                except TimeoutException:
+                except NoSuchElementException:
                     continue
             
-            if not submit_element:
-                self.logger.error("등록 버튼을 찾을 수 없습니다")
-                return False
+            if send_button:
+                # 전송 버튼 클릭
+                send_button.click()
+            else:
+                # Enter 키로 전송
+                input_element.send_keys(Keys.RETURN)
             
-            submit_element.click()
-            time.sleep(2)
+            time.sleep(self.config['settings'].get('wait_after_post', 2))
             
-            self.logger.info("포스팅 완료")
+            self.logger.info(f"✅ 채팅방 포스팅 완료: {chat_url}")
             return True
             
         except Exception as e:
-            self.logger.error(f"포스팅 중 오류: {str(e)}")
+            self.logger.error(f"❌ 채팅방 포스팅 오류: {str(e)}")
             return False
     
     def get_next_post(self) -> Optional[str]:
@@ -260,6 +254,48 @@ class BandPoster:
             post = random.choice(enabled_posts)
         
         return post['content']
+    
+    def get_next_chat_url(self) -> Optional[str]:
+        """다음 채팅방 URL 가져오기"""
+        chat_urls = self.config.get('chat_urls', [])
+        
+        if not chat_urls:
+            self.logger.warning("채팅방 URL이 없습니다")
+            return None
+        
+        if self.config['settings'].get('rotate_chats', True):
+            # 순환 방식
+            url = chat_urls[self.current_chat_index % len(chat_urls)]
+            self.current_chat_index += 1
+        else:
+            # 랜덤 방식
+            url = random.choice(chat_urls)
+        
+        return url
+    
+    def post_to_all_chats(self, content: str) -> Dict[str, bool]:
+        """모든 채팅방에 메시지 포스팅"""
+        results = {}
+        chat_urls = self.config.get('chat_urls', [])
+        
+        self.logger.info(f"📢 {len(chat_urls)}개 채팅방에 포스팅 시작")
+        
+        for i, chat_url in enumerate(chat_urls, 1):
+            self.logger.info(f"\n[{i}/{len(chat_urls)}] 채팅방 포스팅 중...")
+            success = self.post_to_chat(chat_url, content)
+            results[chat_url] = success
+            
+            # 마지막 채팅방이 아니면 대기
+            if i < len(chat_urls):
+                wait_time = self.config['settings'].get('wait_between_chats', 3)
+                self.logger.info(f"⏱️ {wait_time}초 대기 중...")
+                time.sleep(wait_time)
+        
+        # 결과 요약
+        success_count = sum(1 for v in results.values() if v)
+        self.logger.info(f"\n✅ 포스팅 완료: {success_count}/{len(chat_urls)} 성공")
+        
+        return results
     
     def is_within_schedule(self) -> bool:
         """현재 시간이 스케줄 범위 내인지 확인"""
@@ -292,8 +328,11 @@ class BandPoster:
                 self.logger.warning("포스팅할 내용이 없습니다")
                 return False
             
-            # 포스팅
-            success = self.post_message(content)
+            # 모든 채팅방에 포스팅
+            results = self.post_to_all_chats(content)
+            
+            # 성공 여부 확인
+            success = any(results.values())
             
             if success:
                 # 랜덤 딜레이
@@ -301,7 +340,7 @@ class BandPoster:
                     0, 
                     self.config['schedule'].get('random_delay_minutes', 5) * 60
                 )
-                self.logger.info(f"다음 포스팅까지 {random_delay}초 대기")
+                self.logger.info(f"⏱️ 다음 포스팅까지 {random_delay}초 대기")
                 time.sleep(random_delay)
             
             return success
