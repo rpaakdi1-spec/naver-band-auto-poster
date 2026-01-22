@@ -131,25 +131,33 @@ class BandPosterGUI:
         self.delay_entry.insert(0, "5")
         
         ttk.Label(schedule_frame, text="시작 일시:").grid(row=1, column=0, sticky=tk.W, pady=5)
-        self.start_datetime_entry = ttk.Entry(schedule_frame, width=20)
-        self.start_datetime_entry.grid(row=1, column=1, sticky=tk.W, padx=5, pady=5)
+        
+        start_frame = ttk.Frame(schedule_frame)
+        start_frame.grid(row=1, column=1, sticky=tk.W, padx=5, pady=5)
+        
+        self.start_datetime_entry = ttk.Entry(start_frame, width=20)
+        self.start_datetime_entry.pack(side=tk.LEFT)
+        
+        ttk.Label(start_frame, text="(YYYY-MM-DD HH:MM)", font=("맑은 고딕", 8), foreground="gray").pack(side=tk.LEFT, padx=(5, 0))
         
         # 현재 시간을 기본값으로 설정
         now = datetime.now()
         default_start = now.strftime("%Y-%m-%d %H:%M")
         self.start_datetime_entry.insert(0, default_start)
         
-        ttk.Label(schedule_frame, text="(YYYY-MM-DD HH:MM)", font=("맑은 고딕", 8), foreground="gray").grid(row=1, column=1, sticky=tk.E, padx=5, pady=5)
-        
         ttk.Label(schedule_frame, text="종료 일시:").grid(row=1, column=2, sticky=tk.W, padx=(20, 0), pady=5)
-        self.end_datetime_entry = ttk.Entry(schedule_frame, width=20)
-        self.end_datetime_entry.grid(row=1, column=3, sticky=tk.W, padx=5, pady=5)
+        
+        end_frame = ttk.Frame(schedule_frame)
+        end_frame.grid(row=1, column=3, sticky=tk.W, padx=5, pady=5)
+        
+        self.end_datetime_entry = ttk.Entry(end_frame, width=20)
+        self.end_datetime_entry.pack(side=tk.LEFT)
+        
+        ttk.Label(end_frame, text="(YYYY-MM-DD HH:MM)", font=("맑은 고딕", 8), foreground="gray").pack(side=tk.LEFT, padx=(5, 0))
         
         # 24시간 후를 기본값으로 설정
         default_end = (now + timedelta(hours=24)).strftime("%Y-%m-%d %H:%M")
         self.end_datetime_entry.insert(0, default_end)
-        
-        ttk.Label(schedule_frame, text="(YYYY-MM-DD HH:MM)", font=("맑은 고딕", 8), foreground="gray").grid(row=1, column=3, sticky=tk.E, padx=5, pady=5)
         
         ttk.Label(schedule_frame, text="채팅방 간 대기(초):").grid(row=2, column=0, sticky=tk.W)
         self.chat_interval_entry = ttk.Entry(schedule_frame, width=15)
