@@ -163,6 +163,161 @@ class BandPoster:
             self.logger.error(f"Chrome 실행 중 오류: {str(e)}")
             return False
     
+    def fetch_chat_list(self) -> List[Dict[str, str]]:
+        """밴드 채팅방 목록 가져오기"""
+        try:
+            self.logger.info("📋 채팅방 목록 가져오는 중...")
+            
+            # 밴드 메인 페이지로 이동
+            self.driver.get("https://band.us/home")
+            time.sleep(3)
+            
+            chat_list = []
+            
+            # 여러 선택자 시도
+            chat_selectors = [
+                # 채팅 링크 선택자들
+                "//a[contains(@href, '/chat/')]",
+                "//a[contains(@class, 'chat') and contains(@href, '/band/')]",
+                "//div[contains(@class, 'chatList')]//a",
+                "//ul[contains(@class, 'chat')]//a[contains(@href, '/chat/')]"
+            ]
+            
+            chat_elements = []
+            for selector in chat_selectors:
+                try:
+                    elements = self.driver.find_elements(By.XPATH, selector)
+                    if elements:
+                        self.logger.info(f"✅ 채팅방 링크 찾음: {len(elements)}개 (선택자: {selector})")
+                        chat_elements.extend(elements)
+                        break
+                except Exception as e:
+                    continue
+            
+            # 중복 제거를 위한 set
+            seen_urls = set()
+            
+            for element in chat_elements:
+                try:
+                    chat_url = element.get_attribute('href')
+                    
+                    # 유효한 채팅방 URL인지 확인
+                    if chat_url and '/band/' in chat_url and '/chat/' in chat_url:
+                        if chat_url not in seen_urls:
+                            seen_urls.add(chat_url)
+                            
+                            # 채팅방 이름 가져오기
+                            try:
+                                chat_name = element.text.strip()
+                                if not chat_name:
+                                    chat_name = element.get_attribute('title') or "채팅방"
+                            except:
+                                chat_name = "채팅방"
+                            
+                            chat_list.append({
+                                'url': chat_url,
+                                'name': chat_name
+                            })
+                            
+                            self.logger.info(f"  📁 {chat_name}: {chat_url}")
+                            
+                except Exception as e:
+                    continue
+            
+            if not chat_list:
+                self.logger.warning("⚠️ 채팅방을 찾을 수 없습니다. 수동으로 URL을 추가하세요.")
+            else:
+                self.logger.info(f"✅ 총 {len(chat_list)}개의 채팅방을 찾았습니다")
+            
+            return chat_list
+            
+        except Exception as e:
+            self.logger.error(f"❌ 채팅방 목록 가져오기 실패: {str(e)}")
+            return []
+    
+    def fetch_chat_list_from_band(self, band_no: str) -> List[Dict[str, str]]:
+        """특정 밴드의 채팅방 목록 가져오기"""
+        try:
+            self.logger.info(f"📋 밴드 {band_no}의 채팅방 목록 가져오는 중...")
+            
+            # 밴드 페이지로 이동
+            band_url = f"https://band.us/band/{band_no}"
+            self.driver.get(band_url)
+            time.sleep(3)
+            
+            # 채팅 탭 클릭 시도
+            chat_tab_selectors = [
+                "//a[contains(text(), '채팅')]",
+                "//button[contains(text(), '채팅')]",
+                "//a[contains(@href, '/chat')]",
+                "//div[contains(@class, 'menuItem')]//a[contains(text(), '채팅')]"
+            ]
+            
+            for selector in chat_tab_selectors:
+                try:
+                    chat_tab = self.driver.find_element(By.XPATH, selector)
+                    if chat_tab:
+                        self.logger.info("🖱️ 채팅 탭 클릭")
+                        chat_tab.click()
+                        time.sleep(2)
+                        break
+                except:
+                    continue
+            
+            # 채팅방 목록 가져오기
+            chat_list = []
+            
+            # 채팅방 링크 찾기
+            chat_link_selectors = [
+                f"//a[contains(@href, '/band/{band_no}/chat/')]",
+                "//a[contains(@href, '/chat/')]",
+                "//div[contains(@class, 'chatItem')]//a",
+                "//ul[contains(@class, 'chatList')]//a"
+            ]
+            
+            seen_urls = set()
+            
+            for selector in chat_link_selectors:
+                try:
+                    chat_elements = self.driver.find_elements(By.XPATH, selector)
+                    
+                    for element in chat_elements:
+                        try:
+                            chat_url = element.get_attribute('href')
+                            
+                            if chat_url and f'/band/{band_no}/chat/' in chat_url:
+                                if chat_url not in seen_urls:
+                                    seen_urls.add(chat_url)
+                                    
+                                    # 채팅방 이름
+                                    try:
+                                        chat_name = element.text.strip() or element.get_attribute('title') or "채팅방"
+                                    except:
+                                        chat_name = "채팅방"
+                                    
+                                    chat_list.append({
+                                        'url': chat_url,
+                                        'name': chat_name
+                                    })
+                                    
+                                    self.logger.info(f"  📁 {chat_name}: {chat_url}")
+                        except:
+                            continue
+                            
+                except:
+                    continue
+            
+            if not chat_list:
+                self.logger.warning(f"⚠️ 밴드 {band_no}에서 채팅방을 찾을 수 없습니다")
+            else:
+                self.logger.info(f"✅ 총 {len(chat_list)}개의 채팅방을 찾았습니다")
+            
+            return chat_list
+            
+        except Exception as e:
+            self.logger.error(f"❌ 채팅방 목록 가져오기 실패: {str(e)}")
+            return []
+    
     def post_to_chat(self, chat_url: str, content: str) -> bool:
         """특정 채팅방에 메시지 포스팅"""
         try:

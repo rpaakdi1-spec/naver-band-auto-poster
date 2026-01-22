@@ -55,6 +55,7 @@ class BandPosterGUI:
         ttk.Button(chat_btn_frame, text="추가", command=self.add_chat_url).pack(side=tk.LEFT, padx=2)
         ttk.Button(chat_btn_frame, text="삭제", command=self.remove_chat_url).pack(side=tk.LEFT, padx=2)
         ttk.Button(chat_btn_frame, text="전체 삭제", command=self.clear_chat_urls).pack(side=tk.LEFT, padx=2)
+        ttk.Button(chat_btn_frame, text="🔄 채팅방 불러오기", command=self.fetch_chat_rooms).pack(side=tk.LEFT, padx=2)
         
         # 채팅방 목록
         ttk.Label(chat_frame, text="등록된 채팅방:").grid(row=2, column=0, columnspan=2, sticky=tk.W, pady=(10, 5))
@@ -204,6 +205,63 @@ class BandPosterGUI:
         self.poster.config['chat_urls'] = []
         self.chat_listbox.delete(0, tk.END)
         self.log("모든 채팅방 삭제됨")
+    
+    def fetch_chat_rooms(self):
+        """채팅방 목록 자동 불러오기"""
+        self.log("🔄 채팅방 목록 불러오는 중...")
+        self.status_label.config(text="상태: 채팅방 불러오는 중...", foreground="orange")
+        
+        def fetch_thread():
+            try:
+                # 드라이버 초기화
+                if not self.poster.driver:
+                    self.poster.init_driver()
+                
+                # 로그인 확인
+                if not self.poster.is_logged_in:
+                    if not self.poster.start_chrome_and_wait_for_login():
+                        self.log("❌ 로그인 실패")
+                        self.status_label.config(text="상태: 로그인 실패", foreground="red")
+                        messagebox.showerror("오류", "로그인이 필요합니다.")
+                        return
+                
+                # 채팅방 목록 가져오기
+                chat_list = self.poster.fetch_chat_list()
+                
+                if not chat_list:
+                    self.log("⚠️ 채팅방을 찾을 수 없습니다")
+                    self.status_label.config(text="상태: 채팅방 없음", foreground="orange")
+                    messagebox.showwarning("알림", "채팅방을 찾을 수 없습니다.\n\n수동으로 URL을 추가하거나,\n브라우저에서 채팅 탭을 확인 후 다시 시도하세요.")
+                    return
+                
+                # 기존 목록에 추가
+                added_count = 0
+                for chat in chat_list:
+                    url = chat['url']
+                    name = chat['name']
+                    
+                    # 중복 확인
+                    if url not in self.poster.config.get('chat_urls', []):
+                        self.poster.config.setdefault('chat_urls', [])
+                        self.poster.config['chat_urls'].append(url)
+                        
+                        # 리스트박스에 추가
+                        display_text = f"{name} - {url[:40]}..." if len(url) > 40 else f"{name} - {url}"
+                        self.chat_listbox.insert(tk.END, display_text)
+                        
+                        added_count += 1
+                        self.log(f"✅ 추가: {name}")
+                
+                self.log(f"✅ 총 {added_count}개의 채팅방이 추가되었습니다")
+                self.status_label.config(text=f"상태: {added_count}개 채팅방 추가됨", foreground="green")
+                messagebox.showinfo("완료", f"{added_count}개의 채팅방이 추가되었습니다!")
+                
+            except Exception as e:
+                self.log(f"❌ 오류: {str(e)}")
+                self.status_label.config(text="상태: 오류 발생", foreground="red")
+                messagebox.showerror("오류", f"채팅방 목록을 불러오는 중 오류가 발생했습니다:\n\n{str(e)}")
+        
+        threading.Thread(target=fetch_thread, daemon=True).start()
         
     def load_config(self):
         """설정 로드"""
