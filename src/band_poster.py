@@ -170,33 +170,87 @@ class BandPoster:
         try:
             self.logger.info("📋 채팅방 목록 가져오는 중...")
             
-            # 밴드 메인 페이지로 이동
+            # 1. 밴드 홈 페이지로 이동
+            self.logger.info("🌐 밴드 홈으로 이동: https://band.us/home")
             self.driver.get("https://band.us/home")
             time.sleep(3)
             
+            # 2. 페이지 스크롤 (채팅방이 아래에 있을 수 있음)
+            self.logger.info("📜 페이지 스크롤 중...")
+            for i in range(3):
+                self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                time.sleep(1)
+            
+            # 3. 맨 위로 다시 스크롤
+            self.driver.execute_script("window.scrollTo(0, 0);")
+            time.sleep(1)
+            
             chat_list = []
             
-            # 여러 선택자 시도
-            chat_selectors = [
-                # 채팅 링크 선택자들
-                "//a[contains(@href, '/chat/')]",
-                "//a[contains(@class, 'chat') and contains(@href, '/band/')]",
-                "//div[contains(@class, 'chatList')]//a",
-                "//ul[contains(@class, 'chat')]//a[contains(@href, '/chat/')]"
+            # 4. CSS 선택자로 먼저 시도 (더 빠름)
+            css_selectors = [
+                "a[href*='/chat/']",
+                "a[href*='/band/'][href*='/chat/']",
+                ".chatList a",
+                ".chatItem a",
+                "[class*='chat'] a[href*='/chat/']"
             ]
             
             chat_elements = []
-            for selector in chat_selectors:
+            for selector in css_selectors:
                 try:
-                    elements = self.driver.find_elements(By.XPATH, selector)
+                    elements = self.driver.find_elements(By.CSS_SELECTOR, selector)
                     if elements:
-                        self.logger.info(f"✅ 채팅방 링크 찾음: {len(elements)}개 (선택자: {selector})")
+                        self.logger.info(f"✅ 채팅방 링크 찾음 (CSS): {len(elements)}개 - {selector}")
                         chat_elements.extend(elements)
                         break
                 except Exception as e:
                     continue
             
-            # 중복 제거를 위한 set
+            # 5. CSS로 못 찾으면 XPath 시도
+            if not chat_elements:
+                self.logger.info("🔍 XPath로 재시도...")
+                xpath_selectors = [
+                    "//a[contains(@href, '/chat/')]",
+                    "//a[contains(@class, 'chat') and contains(@href, '/band/')]",
+                    "//div[contains(@class, 'chatList')]//a",
+                    "//ul[contains(@class, 'chat')]//a[contains(@href, '/chat/')]",
+                    "//div[contains(@class, 'chat')]//a[contains(@href, '/band/')]"
+                ]
+                
+                for selector in xpath_selectors:
+                    try:
+                        elements = self.driver.find_elements(By.XPATH, selector)
+                        if elements:
+                            self.logger.info(f"✅ 채팅방 링크 찾음 (XPath): {len(elements)}개")
+                            chat_elements.extend(elements)
+                            break
+                    except Exception as e:
+                        continue
+            
+            # 6. JavaScript로 직접 찾기 (최후의 수단)
+            if not chat_elements:
+                self.logger.info("🔍 JavaScript로 재시도...")
+                try:
+                    js_code = """
+                    var links = document.querySelectorAll('a');
+                    var chatLinks = [];
+                    for(var i = 0; i < links.length; i++) {
+                        var href = links[i].href;
+                        if(href && href.includes('/chat/') && href.includes('/band/')) {
+                            chatLinks.push(links[i]);
+                        }
+                    }
+                    return chatLinks;
+                    """
+                    elements = self.driver.execute_script(js_code)
+                    if elements:
+                        self.logger.info(f"✅ 채팅방 링크 찾음 (JavaScript): {len(elements)}개")
+                        chat_elements = elements
+                except Exception as e:
+                    self.logger.error(f"JavaScript 실행 실패: {str(e)}")
+            
+            # 7. 중복 제거를 위한 set
             seen_urls = set()
             
             for element in chat_elements:
@@ -212,7 +266,7 @@ class BandPoster:
                             try:
                                 chat_name = element.text.strip()
                                 if not chat_name:
-                                    chat_name = element.get_attribute('title') or "채팅방"
+                                    chat_name = element.get_attribute('title') or element.get_attribute('aria-label') or "채팅방"
                             except:
                                 chat_name = "채팅방"
                             
@@ -227,7 +281,27 @@ class BandPoster:
                     continue
             
             if not chat_list:
-                self.logger.warning("⚠️ 채팅방을 찾을 수 없습니다. 수동으로 URL을 추가하세요.")
+                # 8. 디버그 정보 출력
+                self.logger.warning("⚠️ 채팅방을 찾을 수 없습니다.")
+                self.logger.info("🔍 디버그 정보:")
+                self.logger.info(f"   현재 URL: {self.driver.current_url}")
+                
+                # 페이지 소스에서 채팅 관련 텍스트 찾기
+                try:
+                    page_source = self.driver.page_source
+                    if '/chat/' in page_source:
+                        self.logger.info("   ✅ 페이지에 '/chat/' 텍스트 존재")
+                    else:
+                        self.logger.info("   ❌ 페이지에 '/chat/' 텍스트 없음")
+                    
+                    if '채팅' in page_source:
+                        self.logger.info("   ✅ 페이지에 '채팅' 텍스트 존재")
+                    else:
+                        self.logger.info("   ❌ 페이지에 '채팅' 텍스트 없음")
+                except:
+                    pass
+                
+                self.logger.warning("💡 수동으로 URL을 추가하거나, 브라우저에서 채팅 탭을 확인 후 다시 시도하세요.")
             else:
                 self.logger.info(f"✅ 총 {len(chat_list)}개의 채팅방을 찾았습니다")
             
@@ -235,6 +309,8 @@ class BandPoster:
             
         except Exception as e:
             self.logger.error(f"❌ 채팅방 목록 가져오기 실패: {str(e)}")
+            import traceback
+            self.logger.error(traceback.format_exc())
             return []
     
     def fetch_chat_list_from_band(self, band_no: str) -> List[Dict[str, str]]:
@@ -247,19 +323,31 @@ class BandPoster:
             self.driver.get(band_url)
             time.sleep(3)
             
+            # 페이지 스크롤
+            for i in range(2):
+                self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                time.sleep(1)
+            
             # 채팅 탭 클릭 시도
             chat_tab_selectors = [
+                "a[href*='/chat']",
+                "button:contains('채팅')",
                 "//a[contains(text(), '채팅')]",
                 "//button[contains(text(), '채팅')]",
                 "//a[contains(@href, '/chat')]",
-                "//div[contains(@class, 'menuItem')]//a[contains(text(), '채팅')]"
+                "//div[contains(@class, 'menuItem')]//a[contains(text(), '채팅')]",
+                "//li[contains(@class, 'menu')]//a[contains(text(), '채팅')]"
             ]
             
             for selector in chat_tab_selectors:
                 try:
-                    chat_tab = self.driver.find_element(By.XPATH, selector)
-                    if chat_tab:
-                        self.logger.info("🖱️ 채팅 탭 클릭")
+                    if selector.startswith('//'):
+                        chat_tab = self.driver.find_element(By.XPATH, selector)
+                    else:
+                        chat_tab = self.driver.find_element(By.CSS_SELECTOR, selector)
+                    
+                    if chat_tab and chat_tab.is_displayed():
+                        self.logger.info(f"🖱️ 채팅 탭 클릭: {selector}")
                         chat_tab.click()
                         time.sleep(2)
                         break
@@ -269,48 +357,72 @@ class BandPoster:
             # 채팅방 목록 가져오기
             chat_list = []
             
-            # 채팅방 링크 찾기
-            chat_link_selectors = [
-                f"//a[contains(@href, '/band/{band_no}/chat/')]",
-                "//a[contains(@href, '/chat/')]",
-                "//div[contains(@class, 'chatItem')]//a",
-                "//ul[contains(@class, 'chatList')]//a"
+            # CSS 선택자로 시도
+            css_selectors = [
+                f"a[href*='/band/{band_no}/chat/']",
+                "a[href*='/chat/']",
+                ".chatItem a",
+                ".chatList a"
             ]
+            
+            chat_elements = []
+            for selector in css_selectors:
+                try:
+                    elements = self.driver.find_elements(By.CSS_SELECTOR, selector)
+                    if elements:
+                        self.logger.info(f"✅ 채팅방 링크 찾음 (CSS): {len(elements)}개")
+                        chat_elements = elements
+                        break
+                except:
+                    continue
+            
+            # XPath로 시도
+            if not chat_elements:
+                xpath_selectors = [
+                    f"//a[contains(@href, '/band/{band_no}/chat/')]",
+                    "//a[contains(@href, '/chat/')]",
+                    "//div[contains(@class, 'chatItem')]//a",
+                    "//ul[contains(@class, 'chatList')]//a"
+                ]
+                
+                for selector in xpath_selectors:
+                    try:
+                        elements = self.driver.find_elements(By.XPATH, selector)
+                        if elements:
+                            self.logger.info(f"✅ 채팅방 링크 찾음 (XPath): {len(elements)}개")
+                            chat_elements = elements
+                            break
+                    except:
+                        continue
             
             seen_urls = set()
             
-            for selector in chat_link_selectors:
+            for element in chat_elements:
                 try:
-                    chat_elements = self.driver.find_elements(By.XPATH, selector)
+                    chat_url = element.get_attribute('href')
                     
-                    for element in chat_elements:
-                        try:
-                            chat_url = element.get_attribute('href')
+                    if chat_url and f'/band/{band_no}/chat/' in chat_url:
+                        if chat_url not in seen_urls:
+                            seen_urls.add(chat_url)
                             
-                            if chat_url and f'/band/{band_no}/chat/' in chat_url:
-                                if chat_url not in seen_urls:
-                                    seen_urls.add(chat_url)
-                                    
-                                    # 채팅방 이름
-                                    try:
-                                        chat_name = element.text.strip() or element.get_attribute('title') or "채팅방"
-                                    except:
-                                        chat_name = "채팅방"
-                                    
-                                    chat_list.append({
-                                        'url': chat_url,
-                                        'name': chat_name
-                                    })
-                                    
-                                    self.logger.info(f"  📁 {chat_name}: {chat_url}")
-                        except:
-                            continue
+                            # 채팅방 이름
+                            try:
+                                chat_name = element.text.strip() or element.get_attribute('title') or element.get_attribute('aria-label') or "채팅방"
+                            except:
+                                chat_name = "채팅방"
                             
+                            chat_list.append({
+                                'url': chat_url,
+                                'name': chat_name
+                            })
+                            
+                            self.logger.info(f"  📁 {chat_name}: {chat_url}")
                 except:
                     continue
             
             if not chat_list:
                 self.logger.warning(f"⚠️ 밴드 {band_no}에서 채팅방을 찾을 수 없습니다")
+                self.logger.info("💡 채팅 탭이 있는지, 채팅방이 생성되어 있는지 확인하세요.")
             else:
                 self.logger.info(f"✅ 총 {len(chat_list)}개의 채팅방을 찾았습니다")
             
@@ -318,6 +430,78 @@ class BandPoster:
             
         except Exception as e:
             self.logger.error(f"❌ 채팅방 목록 가져오기 실패: {str(e)}")
+            import traceback
+            self.logger.error(traceback.format_exc())
+            return []
+    
+    def fetch_all_bands_and_chats(self) -> List[Dict[str, str]]:
+        """모든 밴드를 찾아서 각 밴드의 채팅방 가져오기"""
+        try:
+            self.logger.info("🔍 모든 밴드와 채팅방 검색 중...")
+            
+            # 밴드 목록 페이지로 이동
+            self.driver.get("https://band.us/home/bands")
+            time.sleep(3)
+            
+            # 페이지 스크롤
+            for i in range(3):
+                self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                time.sleep(1)
+            
+            all_chats = []
+            
+            # 밴드 링크 찾기
+            band_links = []
+            band_selectors = [
+                "a[href*='/band/']",
+                "//a[contains(@href, '/band/')]"
+            ]
+            
+            for selector in band_selectors:
+                try:
+                    if selector.startswith('//'):
+                        elements = self.driver.find_elements(By.XPATH, selector)
+                    else:
+                        elements = self.driver.find_elements(By.CSS_SELECTOR, selector)
+                    
+                    if elements:
+                        self.logger.info(f"✅ 밴드 링크 찾음: {len(elements)}개")
+                        band_links = elements
+                        break
+                except:
+                    continue
+            
+            # 밴드 번호 추출
+            band_numbers = set()
+            for link in band_links:
+                try:
+                    href = link.get_attribute('href')
+                    if href and '/band/' in href:
+                        # URL에서 밴드 번호 추출
+                        import re
+                        match = re.search(r'/band/(\d+)', href)
+                        if match:
+                            band_no = match.group(1)
+                            band_numbers.add(band_no)
+                except:
+                    continue
+            
+            self.logger.info(f"📊 발견된 밴드: {len(band_numbers)}개")
+            
+            # 각 밴드의 채팅방 가져오기
+            for i, band_no in enumerate(band_numbers, 1):
+                self.logger.info(f"\n[{i}/{len(band_numbers)}] 밴드 {band_no} 검색 중...")
+                chats = self.fetch_chat_list_from_band(band_no)
+                all_chats.extend(chats)
+                time.sleep(1)  # 과부하 방지
+            
+            self.logger.info(f"\n✅ 총 {len(all_chats)}개의 채팅방을 찾았습니다")
+            return all_chats
+            
+        except Exception as e:
+            self.logger.error(f"❌ 밴드 및 채팅방 검색 실패: {str(e)}")
+            import traceback
+            self.logger.error(traceback.format_exc())
             return []
     
     def post_to_chat(self, chat_url: str, content: str) -> bool:

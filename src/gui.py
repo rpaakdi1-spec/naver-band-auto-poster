@@ -208,7 +208,56 @@ class BandPosterGUI:
     
     def fetch_chat_rooms(self):
         """채팅방 목록 자동 불러오기"""
-        self.log("🔄 채팅방 목록 불러오는 중...")
+        # 사용자에게 검색 방법 선택 대화상자 표시
+        dialog = tk.Toplevel(self.root)
+        dialog.title("채팅방 검색 방법 선택")
+        dialog.geometry("400x250")
+        dialog.resizable(False, False)
+        
+        # 중앙 배치
+        dialog.transient(self.root)
+        dialog.grab_set()
+        
+        tk.Label(dialog, text="채팅방을 어떻게 검색하시겠습니까?", font=("맑은 고딕", 11, "bold")).pack(pady=15)
+        
+        selected_method = tk.StringVar(value="home")
+        
+        methods_frame = tk.Frame(dialog)
+        methods_frame.pack(pady=10)
+        
+        tk.Radiobutton(
+            methods_frame,
+            text="🏠 홈 페이지에서 검색 (빠름, 최근 채팅방)",
+            variable=selected_method,
+            value="home",
+            font=("맑은 고딕", 10)
+        ).pack(anchor='w', pady=5)
+        
+        tk.Radiobutton(
+            methods_frame,
+            text="🔍 모든 밴드 순회 검색 (느림, 모든 채팅방)",
+            variable=selected_method,
+            value="all_bands",
+            font=("맑은 고딕", 10)
+        ).pack(anchor='w', pady=5)
+        
+        def on_confirm():
+            method = selected_method.get()
+            dialog.destroy()
+            self._perform_fetch(method)
+        
+        def on_cancel():
+            dialog.destroy()
+        
+        button_frame = tk.Frame(dialog)
+        button_frame.pack(pady=15)
+        
+        tk.Button(button_frame, text="확인", command=on_confirm, width=10, bg="#4CAF50", fg="white", font=("맑은 고딕", 10, "bold")).pack(side=tk.LEFT, padx=5)
+        tk.Button(button_frame, text="취소", command=on_cancel, width=10, font=("맑은 고딕", 10)).pack(side=tk.LEFT, padx=5)
+    
+    def _perform_fetch(self, method: str):
+        """실제 채팅방 검색 수행"""
+        self.log(f"🔄 채팅방 목록 불러오는 중... (방법: {method})")
         self.status_label.config(text="상태: 채팅방 불러오는 중...", foreground="orange")
         
         def fetch_thread():
@@ -225,8 +274,15 @@ class BandPosterGUI:
                         messagebox.showerror("오류", "로그인이 필요합니다.")
                         return
                 
-                # 채팅방 목록 가져오기
-                chat_list = self.poster.fetch_chat_list()
+                # 선택한 방법에 따라 채팅방 목록 가져오기
+                if method == "home":
+                    self.log("📋 홈 페이지에서 채팅방 검색 중...")
+                    chat_list = self.poster.fetch_chat_list()
+                elif method == "all_bands":
+                    self.log("📋 모든 밴드를 순회하며 채팅방 검색 중... (시간이 걸릴 수 있습니다)")
+                    chat_list = self.poster.fetch_all_bands_and_chats()
+                else:
+                    chat_list = []
                 
                 if not chat_list:
                     self.log("⚠️ 채팅방을 찾을 수 없습니다")
