@@ -76,7 +76,9 @@ class BandPoster:
                 "rotate_chats": True,
                 "log_level": "INFO",
                 "wait_after_post": 2,
-                "wait_between_chats": 3
+                "wait_between_chats": 3,
+                "fast_mode": False,
+                "input_wait_timeout": 3
             }
         }
     
@@ -325,28 +327,75 @@ class BandPoster:
             
             # 채팅방 URL로 이동
             self.driver.get(chat_url)
-            time.sleep(self.config['settings'].get('wait_between_chats', 3))
             
-            # 채팅 입력창 찾기 (여러 선택자 시도)
-            input_selectors = [
-                "//textarea[@placeholder='메시지를 입력하세요']",
-                "//textarea[contains(@class, 'chatInput')]",
-                "//div[@contenteditable='true']",
-                "//textarea[contains(@placeholder, '메시지')]",
-                "//input[@type='text' and contains(@placeholder, '메시지')]"
+            # 빠른 모드 설정
+            fast_mode = self.config['settings'].get('fast_mode', False)
+            
+            # 페이지 로드 대기
+            if fast_mode:
+                time.sleep(0.5)  # 빠른 모드: 0.5초
+            else:
+                wait_time = self.config['settings'].get('wait_between_chats', 3)
+                time.sleep(max(1, wait_time - 1))  # 일반 모드: 최소 1초
+            
+            # 빠른 입력창 찾기 - CSS 선택자 우선 (XPath보다 빠름)
+            input_element = None
+            timeout = self.config['settings'].get('input_wait_timeout', 3)
+            
+            # 1단계: CSS 선택자로 빠르게 찾기 (가장 일반적인 패턴)
+            css_selectors = [
+                "textarea[placeholder*='메시지']",
+                "textarea.chatInput",
+                "textarea[name='message']",
+                "div[contenteditable='true']",
+                "input[placeholder*='메시지']"
             ]
             
-            input_element = None
-            for selector in input_selectors:
+            for selector in css_selectors:
                 try:
-                    input_element = WebDriverWait(self.driver, 10).until(
-                        EC.presence_of_element_located((By.XPATH, selector))
-                    )
+                    elements = self.driver.find_elements(By.CSS_SELECTOR, selector)
+                    for element in elements:
+                        if element.is_displayed() and element.is_enabled():
+                            input_element = element
+                            self.logger.info(f"✅ 입력창 찾음 (CSS): {selector}")
+                            break
                     if input_element:
-                        self.logger.info(f"✅ 입력창 찾음: {selector}")
                         break
-                except TimeoutException:
+                except:
                     continue
+            
+            # 2단계: CSS로 못 찾으면 XPath로 시도 (더 구체적)
+            if not input_element:
+                xpath_selectors = [
+                    "//textarea[@placeholder='메시지를 입력하세요']",
+                    "//textarea[contains(@class, 'chatInput')]",
+                    "//textarea[contains(@placeholder, '메시지')]",
+                    "//div[@contenteditable='true' and contains(@class, 'input')]"
+                ]
+                
+                for selector in xpath_selectors:
+                    try:
+                        elements = self.driver.find_elements(By.XPATH, selector)
+                        for element in elements:
+                            if element.is_displayed() and element.is_enabled():
+                                input_element = element
+                                self.logger.info(f"✅ 입력창 찾음 (XPath): {selector}")
+                                break
+                        if input_element:
+                            break
+                    except:
+                        continue
+            
+            # 3단계: 마지막으로 명시적 대기로 시도 (최소 대기 시간)
+            if not input_element:
+                try:
+                    input_element = WebDriverWait(self.driver, timeout).until(
+                        EC.presence_of_element_located((By.CSS_SELECTOR, "textarea, input[type='text'], div[contenteditable='true']"))
+                    )
+                    self.logger.info("✅ 입력창 찾음 (대기)")
+                except TimeoutException:
+                    self.logger.error("❌ 채팅 입력창을 찾을 수 없습니다")
+                    return False
             
             if not input_element:
                 self.logger.error("❌ 채팅 입력창을 찾을 수 없습니다")

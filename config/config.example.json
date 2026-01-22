@@ -21,6 +21,10 @@
     "rotate_chats": true,
     "log_level": "INFO",
     "wait_after_post": 2,
-    "wait_between_chats": 3
+    "wait_between_chats": 3,
+    "fast_mode": false,
+    "_comment_fast_mode": "빠른 모드 (대기 시간 단축, 안정성 낮음)",
+    "input_wait_timeout": 3,
+    "_comment_input_wait_timeout": "입력창 찾기 대기 시간 (초)"
   }
 }
