@@ -21,8 +21,9 @@
   "schedule": {
     "interval_minutes": 30,
     "random_delay_minutes": 5,
-    "start_time": "09:00",
-    "end_time": "22:00"
+    "start_datetime": "2026-01-22 09:00",
+    "end_datetime": "2026-01-23 09:00",
+    "_comment_datetime": "날짜+시간 형식 (YYYY-MM-DD HH:MM), 프로그램 시작 시 현재~24시간 후로 자동 설정"
   },
   "settings": {
     "rotate_posts": true,

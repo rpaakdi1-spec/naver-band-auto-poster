@@ -8,7 +8,7 @@ import json
 import time
 import random
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 
 from selenium import webdriver
@@ -62,14 +62,19 @@ class BandPoster:
     
     def _get_default_config(self) -> Dict:
         """기본 설정 반환"""
+        # 현재 시간부터 24시간 후까지 기본 설정
+        now = datetime.now()
+        start_datetime = now.strftime("%Y-%m-%d %H:%M")
+        end_datetime = (now + timedelta(hours=24)).strftime("%Y-%m-%d %H:%M")
+        
         return {
             "chat_rooms": [],
             "posts": [],
             "schedule": {
                 "interval_minutes": 30,
                 "random_delay_minutes": 5,
-                "start_time": "09:00",
-                "end_time": "22:00"
+                "start_datetime": start_datetime,
+                "end_datetime": end_datetime
             },
             "settings": {
                 "rotate_posts": True,
@@ -725,11 +730,34 @@ class BandPoster:
     
     def is_within_schedule(self) -> bool:
         """현재 시간이 스케줄 범위 내인지 확인"""
-        now = datetime.now().time()
-        start_time = datetime.strptime(self.config['schedule']['start_time'], "%H:%M").time()
-        end_time = datetime.strptime(self.config['schedule']['end_time'], "%H:%M").time()
+        now = datetime.now()
         
-        return start_time <= now <= end_time
+        # 새로운 형식 (YYYY-MM-DD HH:MM) 지원
+        if 'start_datetime' in self.config['schedule'] and 'end_datetime' in self.config['schedule']:
+            try:
+                start_datetime = datetime.strptime(self.config['schedule']['start_datetime'], "%Y-%m-%d %H:%M")
+                end_datetime = datetime.strptime(self.config['schedule']['end_datetime'], "%Y-%m-%d %H:%M")
+                
+                is_within = start_datetime <= now <= end_datetime
+                
+                if not is_within:
+                    self.logger.info(f"스케줄 범위 외: 현재 {now.strftime('%Y-%m-%d %H:%M')}, 시작 {start_datetime.strftime('%Y-%m-%d %H:%M')}, 종료 {end_datetime.strftime('%Y-%m-%d %H:%M')}")
+                
+                return is_within
+            except ValueError as e:
+                self.logger.error(f"날짜/시간 형식 오류: {str(e)}")
+                return False
+        
+        # 기존 형식 (HH:MM) 호환성 유지
+        elif 'start_time' in self.config['schedule'] and 'end_time' in self.config['schedule']:
+            now_time = now.time()
+            start_time = datetime.strptime(self.config['schedule']['start_time'], "%H:%M").time()
+            end_time = datetime.strptime(self.config['schedule']['end_time'], "%H:%M").time()
+            
+            return start_time <= now_time <= end_time
+        
+        # 설정이 없으면 항상 실행
+        return True
     
     def run_once(self) -> bool:
         """한 번 실행"""

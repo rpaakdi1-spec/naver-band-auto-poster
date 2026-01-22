@@ -130,15 +130,26 @@ class BandPosterGUI:
         self.delay_entry.grid(row=0, column=3, sticky=tk.W, padx=5)
         self.delay_entry.insert(0, "5")
         
-        ttk.Label(schedule_frame, text="시작 시간:").grid(row=1, column=0, sticky=tk.W, pady=5)
-        self.start_time_entry = ttk.Entry(schedule_frame, width=15)
-        self.start_time_entry.grid(row=1, column=1, sticky=tk.W, padx=5, pady=5)
-        self.start_time_entry.insert(0, "09:00")
+        ttk.Label(schedule_frame, text="시작 일시:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        self.start_datetime_entry = ttk.Entry(schedule_frame, width=20)
+        self.start_datetime_entry.grid(row=1, column=1, sticky=tk.W, padx=5, pady=5)
         
-        ttk.Label(schedule_frame, text="종료 시간:").grid(row=1, column=2, sticky=tk.W, padx=(20, 0), pady=5)
-        self.end_time_entry = ttk.Entry(schedule_frame, width=15)
-        self.end_time_entry.grid(row=1, column=3, sticky=tk.W, padx=5, pady=5)
-        self.end_time_entry.insert(0, "22:00")
+        # 현재 시간을 기본값으로 설정
+        now = datetime.now()
+        default_start = now.strftime("%Y-%m-%d %H:%M")
+        self.start_datetime_entry.insert(0, default_start)
+        
+        ttk.Label(schedule_frame, text="(YYYY-MM-DD HH:MM)", font=("맑은 고딕", 8), foreground="gray").grid(row=1, column=1, sticky=tk.E, padx=5, pady=5)
+        
+        ttk.Label(schedule_frame, text="종료 일시:").grid(row=1, column=2, sticky=tk.W, padx=(20, 0), pady=5)
+        self.end_datetime_entry = ttk.Entry(schedule_frame, width=20)
+        self.end_datetime_entry.grid(row=1, column=3, sticky=tk.W, padx=5, pady=5)
+        
+        # 24시간 후를 기본값으로 설정
+        default_end = (now + timedelta(hours=24)).strftime("%Y-%m-%d %H:%M")
+        self.end_datetime_entry.insert(0, default_end)
+        
+        ttk.Label(schedule_frame, text="(YYYY-MM-DD HH:MM)", font=("맑은 고딕", 8), foreground="gray").grid(row=1, column=3, sticky=tk.E, padx=5, pady=5)
         
         ttk.Label(schedule_frame, text="채팅방 간 대기(초):").grid(row=2, column=0, sticky=tk.W)
         self.chat_interval_entry = ttk.Entry(schedule_frame, width=15)
@@ -521,8 +532,15 @@ class BandPosterGUI:
             # 스케줄 설정 저장
             self.poster.config['schedule']['interval_minutes'] = int(self.interval_entry.get())
             self.poster.config['schedule']['random_delay_minutes'] = int(self.delay_entry.get())
-            self.poster.config['schedule']['start_time'] = self.start_time_entry.get()
-            self.poster.config['schedule']['end_time'] = self.end_time_entry.get()
+            self.poster.config['schedule']['start_datetime'] = self.start_datetime_entry.get()
+            self.poster.config['schedule']['end_datetime'] = self.end_datetime_entry.get()
+            
+            # 날짜+시간 형식 검증
+            try:
+                datetime.strptime(self.start_datetime_entry.get(), "%Y-%m-%d %H:%M")
+                datetime.strptime(self.end_datetime_entry.get(), "%Y-%m-%d %H:%M")
+            except ValueError:
+                raise ValueError("날짜/시간 형식이 올바르지 않습니다. (YYYY-MM-DD HH:MM)")
             
             # 채팅방 설정 저장
             self.poster.config['settings']['wait_between_chats'] = int(self.chat_interval_entry.get())
@@ -550,11 +568,32 @@ class BandPosterGUI:
         self.delay_entry.delete(0, tk.END)
         self.delay_entry.insert(0, str(config['schedule'].get('random_delay_minutes', 5)))
         
-        self.start_time_entry.delete(0, tk.END)
-        self.start_time_entry.insert(0, config['schedule'].get('start_time', '09:00'))
+        # 날짜+시간 로드 (기존 시간 형식 마이그레이션)
+        self.start_datetime_entry.delete(0, tk.END)
+        if 'start_datetime' in config['schedule']:
+            # 새로운 형식
+            self.start_datetime_entry.insert(0, config['schedule'].get('start_datetime'))
+        elif 'start_time' in config['schedule']:
+            # 기존 형식 (HH:MM) -> 오늘 날짜 + 시간으로 변환
+            old_time = config['schedule'].get('start_time', '09:00')
+            today = datetime.now().strftime("%Y-%m-%d")
+            self.start_datetime_entry.insert(0, f"{today} {old_time}")
+        else:
+            # 기본값: 현재 시간
+            self.start_datetime_entry.insert(0, datetime.now().strftime("%Y-%m-%d %H:%M"))
         
-        self.end_time_entry.delete(0, tk.END)
-        self.end_time_entry.insert(0, config['schedule'].get('end_time', '22:00'))
+        self.end_datetime_entry.delete(0, tk.END)
+        if 'end_datetime' in config['schedule']:
+            # 새로운 형식
+            self.end_datetime_entry.insert(0, config['schedule'].get('end_datetime'))
+        elif 'end_time' in config['schedule']:
+            # 기존 형식 (HH:MM) -> 오늘 날짜 + 시간으로 변환
+            old_time = config['schedule'].get('end_time', '22:00')
+            today = datetime.now().strftime("%Y-%m-%d")
+            self.end_datetime_entry.insert(0, f"{today} {old_time}")
+        else:
+            # 기본값: 24시간 후
+            self.end_datetime_entry.insert(0, (datetime.now() + timedelta(hours=24)).strftime("%Y-%m-%d %H:%M"))
         
         self.chat_interval_entry.delete(0, tk.END)
         self.chat_interval_entry.insert(0, str(config['settings'].get('wait_between_chats', 3)))
