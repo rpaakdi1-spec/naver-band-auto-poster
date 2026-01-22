@@ -604,56 +604,8 @@ class BandPoster:
             
             time.sleep(self.config['settings'].get('wait_after_post', 2))
             
-            # 채팅방 닫기 (여러 방법 시도)
-            self.logger.info("🚪 채팅방 닫기 시도...")
-            
-            try:
-                # 방법 1: ESC 키로 닫기 시도
-                actions = ActionChains(self.driver)
-                actions.send_keys(Keys.ESCAPE).perform()
-                time.sleep(0.3)
-                self.logger.info("✅ ESC 키로 닫기 시도")
-            except:
-                pass
-            
-            try:
-                # 방법 2: 닫기 버튼 찾아서 클릭
-                close_selectors = [
-                    "button[aria-label*='닫기']",
-                    "button[title*='닫기']",
-                    "button.close",
-                    "button[class*='close']",
-                    "a[class*='close']",
-                    "//button[contains(@aria-label, '닫기')]",
-                    "//button[contains(@title, '닫기')]",
-                    "//button[contains(@class, 'close')]"
-                ]
-                
-                close_button = None
-                for selector in close_selectors:
-                    try:
-                        if selector.startswith('//'):
-                            close_button = self.driver.find_element(By.XPATH, selector)
-                        else:
-                            close_button = self.driver.find_element(By.CSS_SELECTOR, selector)
-                        
-                        if close_button and close_button.is_displayed():
-                            close_button.click()
-                            self.logger.info(f"✅ 닫기 버튼 클릭: {selector}")
-                            time.sleep(0.3)
-                            break
-                    except:
-                        continue
-            except:
-                pass
-            
-            try:
-                # 방법 3: 브라우저 뒤로 가기
-                self.driver.back()
-                self.logger.info("✅ 뒤로 가기로 채팅방 나가기")
-                time.sleep(0.3)
-            except:
-                pass
+            # 채팅방은 닫지 않고 그대로 유지 (세션 안정성 확보)
+            # 다음 채팅방으로 이동 시 자동으로 새 페이지 로드됨
             
             self.logger.info(f"✅ 채팅방 포스팅 완료: {chat_url}")
             return True
