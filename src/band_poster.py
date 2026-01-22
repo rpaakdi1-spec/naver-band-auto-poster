@@ -14,6 +14,7 @@ from typing import List, Dict, Optional
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
@@ -202,33 +203,20 @@ class BandPoster:
             
             # 메시지 입력
             input_element.send_keys(content)
-            time.sleep(1)
+            time.sleep(0.5)
             
-            # Enter 키로 전송 또는 전송 버튼 클릭
-            send_button_selectors = [
-                "//button[contains(text(), '전송')]",
-                "//button[contains(@class, 'sendBtn')]",
-                "//button[@type='submit']"
-            ]
-            
-            send_button = None
-            for selector in send_button_selectors:
-                try:
-                    send_button = self.driver.find_element(By.XPATH, selector)
-                    if send_button and send_button.is_displayed():
-                        self.logger.info(f"✅ 전송 버튼 찾음: {selector}")
-                        break
-                except NoSuchElementException:
-                    continue
-            
-            if send_button:
-                # 전송 버튼 클릭
-                send_button.click()
-            else:
-                # Enter 키로 전송
-                input_element.send_keys(Keys.RETURN)
+            # Enter 키로 전송
+            self.logger.info("⌨️ Enter 키로 메시지 전송")
+            input_element.send_keys(Keys.RETURN)
             
             time.sleep(self.config['settings'].get('wait_after_post', 2))
+            
+            # Alt+F4로 채팅방 창 닫기
+            self.logger.info("🚪 Alt+F4로 채팅방 닫기")
+            actions = ActionChains(self.driver)
+            actions.key_down(Keys.ALT).send_keys(Keys.F4).key_up(Keys.ALT).perform()
+            
+            time.sleep(0.5)
             
             self.logger.info(f"✅ 채팅방 포스팅 완료: {chat_url}")
             return True
