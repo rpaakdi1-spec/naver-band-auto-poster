@@ -3,17 +3,19 @@ from tkinter import ttk, scrolledtext, messagebox
 import threading
 import time
 import schedule
+from datetime import datetime, timedelta
 from src.band_poster import BandPoster
 
 class BandPosterGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("네이버 밴드 자동 포스팅")
-        self.root.geometry("900x800")
+        self.root.geometry("1200x900")
         
         self.poster = BandPoster()
         self.is_running = False
         self.schedule_thread = None
+        self.next_post_time = None
         
         # 채팅방 체크박스 변수 리스트
         self.chat_check_vars = []
@@ -28,7 +30,7 @@ class BandPosterGUI:
         
         # 안내 메시지
         info_frame = ttk.LabelFrame(main_frame, text="ℹ️ 사용 안내", padding="10")
-        info_frame.grid(row=0, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+        info_frame.grid(row=0, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=5)
         
         info_text = """
 🌐 Chrome이 자동으로 실행되며, 로그인은 브라우저에서 수동으로 진행합니다.
@@ -38,18 +40,19 @@ class BandPosterGUI:
         info_label = ttk.Label(info_frame, text=info_text.strip(), foreground="blue", justify=tk.LEFT)
         info_label.grid(row=0, column=0, sticky=tk.W)
         
-        # 채팅방 URL 관리
+        # 좌측: 채팅방 관리
         chat_frame = ttk.LabelFrame(main_frame, text="📱 채팅방 관리", padding="10")
-        chat_frame.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+        chat_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5, padx=(0, 5))
         
         # 별명 입력
         ttk.Label(chat_frame, text="별명:").grid(row=0, column=0, sticky=tk.W, padx=5)
         self.chat_name_entry = ttk.Entry(chat_frame, width=20)
-        self.chat_name_entry.grid(row=0, column=1, sticky=tk.W, padx=5)
+        self.chat_name_entry.grid(row=0, column=1, sticky=tk.W, padx=5, pady=2)
         
+        # URL 입력
         ttk.Label(chat_frame, text="채팅방 URL:").grid(row=1, column=0, sticky=tk.W, padx=5)
-        self.chat_url_entry = ttk.Entry(chat_frame, width=60)
-        self.chat_url_entry.grid(row=1, column=1, sticky=(tk.W, tk.E), padx=5)
+        self.chat_url_entry = ttk.Entry(chat_frame, width=40)
+        self.chat_url_entry.grid(row=1, column=1, sticky=(tk.W, tk.E), padx=5, pady=2)
         
         chat_btn_frame = ttk.Frame(chat_frame)
         chat_btn_frame.grid(row=2, column=0, columnspan=2, pady=5)
@@ -59,13 +62,13 @@ class BandPosterGUI:
         ttk.Button(chat_btn_frame, text="🗑 전체 삭제", command=self.clear_chat_urls, width=12).pack(side=tk.LEFT, padx=2)
         
         # 채팅방 목록
-        ttk.Label(chat_frame, text="✓ 등록된 채팅방 (체크하여 포스팅할 채팅방 선택):").grid(row=3, column=0, columnspan=2, sticky=tk.W, pady=(10, 5), padx=5)
+        ttk.Label(chat_frame, text="✓ 등록된 채팅방 (체크하여 선택):").grid(row=3, column=0, columnspan=2, sticky=tk.W, pady=(10, 5), padx=5)
         
         # 스크롤 가능한 채팅방 목록
         chat_list_container = ttk.Frame(chat_frame)
-        chat_list_container.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+        chat_list_container.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
         
-        chat_canvas = tk.Canvas(chat_list_container, height=150, bg="white")
+        chat_canvas = tk.Canvas(chat_list_container, height=400, bg="white")
         chat_scrollbar = ttk.Scrollbar(chat_list_container, orient="vertical", command=chat_canvas.yview)
         self.chat_checkboxes_frame = ttk.Frame(chat_canvas)
         
@@ -79,6 +82,39 @@ class BandPosterGUI:
         
         chat_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         chat_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        chat_frame.columnconfigure(1, weight=1)
+        chat_frame.rowconfigure(4, weight=1)
+        
+        # 우측: 포스트 관리
+        post_frame = ttk.LabelFrame(main_frame, text="📝 포스트 관리", padding="10")
+        post_frame.grid(row=1, column=1, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5, padx=(5, 0))
+        
+        ttk.Label(post_frame, text="포스트 내용:").grid(row=0, column=0, sticky=tk.W)
+        
+        self.post_text = scrolledtext.ScrolledText(post_frame, width=50, height=5)
+        self.post_text.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=5)
+        
+        post_btn_frame = ttk.Frame(post_frame)
+        post_btn_frame.grid(row=2, column=0)
+        
+        ttk.Button(post_btn_frame, text="✚ 추가", command=self.add_post, width=10).pack(side=tk.LEFT, padx=5)
+        ttk.Button(post_btn_frame, text="✖ 삭제", command=self.remove_post, width=10).pack(side=tk.LEFT, padx=5)
+        
+        ttk.Label(post_frame, text="✓ 등록된 포스트:").grid(row=3, column=0, sticky=tk.W, pady=(10, 5))
+        
+        post_list_frame = ttk.Frame(post_frame)
+        post_list_frame.grid(row=4, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        
+        self.post_listbox = tk.Listbox(post_list_frame, height=20)
+        self.post_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
+        post_scrollbar = ttk.Scrollbar(post_list_frame, orient=tk.VERTICAL, command=self.post_listbox.yview)
+        post_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.post_listbox.config(yscrollcommand=post_scrollbar.set)
+        
+        post_frame.columnconfigure(0, weight=1)
+        post_frame.rowconfigure(4, weight=1)
         
         # 스케줄 설정
         schedule_frame = ttk.LabelFrame(main_frame, text="⏰ 스케줄 설정", padding="10")
@@ -109,36 +145,9 @@ class BandPosterGUI:
         self.chat_interval_entry.grid(row=2, column=1, sticky=tk.W, padx=5)
         self.chat_interval_entry.insert(0, "3")
         
-        # 포스트 관리
-        post_frame = ttk.LabelFrame(main_frame, text="📝 포스트 관리", padding="10")
-        post_frame.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
-        
-        ttk.Label(post_frame, text="포스트 내용:").grid(row=0, column=0, sticky=tk.W)
-        
-        self.post_text = scrolledtext.ScrolledText(post_frame, width=70, height=5)
-        self.post_text.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
-        
-        post_btn_frame = ttk.Frame(post_frame)
-        post_btn_frame.grid(row=2, column=0, columnspan=2)
-        
-        ttk.Button(post_btn_frame, text="추가", command=self.add_post).pack(side=tk.LEFT, padx=5)
-        ttk.Button(post_btn_frame, text="삭제", command=self.remove_post).pack(side=tk.LEFT, padx=5)
-        
-        ttk.Label(post_frame, text="등록된 포스트:").grid(row=3, column=0, columnspan=2, sticky=tk.W, pady=(10, 5))
-        
-        post_list_frame = ttk.Frame(post_frame)
-        post_list_frame.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S))
-        
-        self.post_listbox = tk.Listbox(post_list_frame, height=6)
-        self.post_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        
-        post_scrollbar = ttk.Scrollbar(post_list_frame, orient=tk.VERTICAL, command=self.post_listbox.yview)
-        post_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        self.post_listbox.config(yscrollcommand=post_scrollbar.set)
-        
         # 설정
         settings_frame = ttk.LabelFrame(main_frame, text="⚙️ 설정", padding="10")
-        settings_frame.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+        settings_frame.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
         
         self.rotate_var = tk.BooleanVar(value=True)
         ttk.Checkbutton(settings_frame, text="포스트 순환 (체크 해제 시 랜덤)", 
@@ -147,6 +156,26 @@ class BandPosterGUI:
         self.rotate_chat_var = tk.BooleanVar(value=True)
         ttk.Checkbutton(settings_frame, text="채팅방 순환 (체크 해제 시 랜덤)", 
                        variable=self.rotate_chat_var).grid(row=0, column=1, sticky=tk.W, padx=5)
+        
+        # 다음 포스팅 카운터
+        counter_frame = ttk.LabelFrame(main_frame, text="⏱️ 다음 포스팅", padding="10")
+        counter_frame.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+        
+        self.countdown_label = ttk.Label(
+            counter_frame, 
+            text="대기 중", 
+            font=("맑은 고딕", 14, "bold"),
+            foreground="gray"
+        )
+        self.countdown_label.pack(pady=5)
+        
+        self.next_post_info_label = ttk.Label(
+            counter_frame,
+            text="",
+            font=("맑은 고딕", 9),
+            foreground="blue"
+        )
+        self.next_post_info_label.pack()
         
         # 버튼
         button_frame = ttk.Frame(main_frame)
@@ -165,16 +194,63 @@ class BandPosterGUI:
         log_frame = ttk.LabelFrame(main_frame, text="📋 로그", padding="10")
         log_frame.grid(row=7, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
         
-        self.log_text = scrolledtext.ScrolledText(log_frame, width=70, height=8, state=tk.DISABLED)
+        self.log_text = scrolledtext.ScrolledText(log_frame, width=100, height=12, state=tk.DISABLED)
         self.log_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        
+        log_frame.columnconfigure(0, weight=1)
+        log_frame.rowconfigure(0, weight=1)
         
         # 그리드 가중치 설정
         main_frame.columnconfigure(0, weight=1)
-        main_frame.rowconfigure(3, weight=1)
-        main_frame.rowconfigure(7, weight=1)
+        main_frame.columnconfigure(1, weight=1)
+        main_frame.rowconfigure(1, weight=2)  # 채팅방/포스트 영역
+        main_frame.rowconfigure(7, weight=1)  # 로그 영역
         
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
+        
+        # 카운터 업데이트 시작
+        self.update_countdown()
+        
+    def update_countdown(self):
+        """다음 포스팅까지 카운트다운 업데이트"""
+        if self.is_running and self.next_post_time:
+            now = datetime.now()
+            remaining = self.next_post_time - now
+            
+            if remaining.total_seconds() > 0:
+                hours = int(remaining.total_seconds() // 3600)
+                minutes = int((remaining.total_seconds() % 3600) // 60)
+                seconds = int(remaining.total_seconds() % 60)
+                
+                if hours > 0:
+                    countdown_text = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+                else:
+                    countdown_text = f"{minutes:02d}:{seconds:02d}"
+                
+                self.countdown_label.config(
+                    text=countdown_text,
+                    foreground="green"
+                )
+                
+                next_time_str = self.next_post_time.strftime("%H:%M:%S")
+                self.next_post_info_label.config(
+                    text=f"다음 포스팅 예정: {next_time_str}"
+                )
+            else:
+                self.countdown_label.config(
+                    text="포스팅 중...",
+                    foreground="orange"
+                )
+        else:
+            self.countdown_label.config(
+                text="대기 중",
+                foreground="gray"
+            )
+            self.next_post_info_label.config(text="")
+        
+        # 1초마다 업데이트
+        self.root.after(1000, self.update_countdown)
         
     def log(self, message):
         """로그 메시지 추가"""
@@ -218,7 +294,7 @@ class BandPosterGUI:
             name_label.pack(side=tk.LEFT, padx=(5, 10))
             
             url_text = room.get('url', '')
-            url_display = url_text if len(url_text) <= 50 else url_text[:47] + "..."
+            url_display = url_text if len(url_text) <= 40 else url_text[:37] + "..."
             url_label = ttk.Label(frame, text=url_display, font=("맑은 고딕", 8))
             url_label.pack(side=tk.LEFT)
             
@@ -370,13 +446,24 @@ class BandPosterGUI:
         self.status_label.config(text="상태: ▶ 실행 중", foreground="green")
         self.log("▶ 자동 포스팅 시작")
         
-        # 스케줄 설정
+        # 다음 포스팅 시간 계산
         interval = self.poster.config['schedule']['interval_minutes']
-        schedule.every(interval).minutes.do(self.poster.run_once)
+        self.next_post_time = datetime.now() + timedelta(minutes=interval)
+        
+        # 스케줄 설정
+        schedule.every(interval).minutes.do(self.scheduled_post)
         
         # 스케줄 실행 스레드
         self.schedule_thread = threading.Thread(target=self.run_schedule, daemon=True)
         self.schedule_thread.start()
+        
+    def scheduled_post(self):
+        """스케줄된 포스팅 실행"""
+        self.poster.run_once()
+        
+        # 다음 포스팅 시간 계산
+        interval = self.poster.config['schedule']['interval_minutes']
+        self.next_post_time = datetime.now() + timedelta(minutes=interval)
         
     def run_schedule(self):
         """스케줄 실행"""
@@ -391,6 +478,7 @@ class BandPosterGUI:
             return
         
         self.is_running = False
+        self.next_post_time = None
         schedule.clear()
         self.status_label.config(text="상태: ⏸ 중지됨", foreground="red")
         self.log("⏸ 자동 포스팅 중지")
