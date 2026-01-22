@@ -49,7 +49,7 @@ python src/safe_band_macro.py --test
 ### GUI 실행 후
 
 1. **로그인 정보 입력**
-   - 네이버 ID
+   - 밴드 ID (휴대폰 번호 또는 이메일)
    - 비밀번호
    - 밴드 URL (예: https://band.us/band/12345678)
 
@@ -79,7 +79,7 @@ python src/safe_band_macro.py --test
 
 ```json
 {
-  "naver_id": "your_id",
+  "naver_id": "your_phone_or_email",
   "naver_password": "your_password",
   "band_url": "https://band.us/band/xxxxx",
   "posts": [

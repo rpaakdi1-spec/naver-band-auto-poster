@@ -128,33 +128,45 @@ class BandPoster:
             raise
     
     def login(self) -> bool:
-        """네이버 로그인"""
+        """네이버밴드 로그인"""
         try:
-            self.logger.info("네이버 로그인 시작")
+            self.logger.info("네이버밴드 로그인 시작")
             
-            self.driver.get("https://nid.naver.com/nidlogin.login")
-            time.sleep(2)
+            # 네이버밴드 로그인 페이지로 이동
+            self.driver.get("https://auth.band.us/phone_login?keep_login=false")
+            time.sleep(3)
             
-            # 아이디 입력
-            id_input = self.driver.find_element(By.ID, "id")
-            id_input.click()
-            id_input.send_keys(self.config['naver_id'])
-            time.sleep(0.5)
+            # 휴대폰 번호 입력 (또는 이메일)
+            try:
+                phone_input = self.driver.find_element(By.CSS_SELECTOR, "input[type='tel'], input[type='text'], input[name='phone']")
+                phone_input.click()
+                phone_input.send_keys(self.config['naver_id'])
+                time.sleep(0.5)
+            except:
+                self.logger.warning("휴대폰 입력란을 찾을 수 없습니다. 다른 방법 시도 중...")
             
             # 비밀번호 입력
-            pw_input = self.driver.find_element(By.ID, "pw")
-            pw_input.click()
-            pw_input.send_keys(self.config['naver_password'])
-            time.sleep(0.5)
+            try:
+                pw_input = self.driver.find_element(By.CSS_SELECTOR, "input[type='password']")
+                pw_input.click()
+                pw_input.send_keys(self.config['naver_password'])
+                time.sleep(0.5)
+            except:
+                self.logger.error("비밀번호 입력란을 찾을 수 없습니다")
+                return False
             
             # 로그인 버튼 클릭
-            login_btn = self.driver.find_element(By.ID, "log.login")
-            login_btn.click()
+            try:
+                login_btn = self.driver.find_element(By.CSS_SELECTOR, "button[type='submit'], button.submitBtn")
+                login_btn.click()
+            except:
+                self.logger.error("로그인 버튼을 찾을 수 없습니다")
+                return False
             
             time.sleep(3)
             
             # 로그인 성공 확인
-            if "nid.naver.com" not in self.driver.current_url:
+            if "auth.band.us" not in self.driver.current_url or "band.us" in self.driver.current_url:
                 self.is_logged_in = True
                 self.logger.info("로그인 성공")
                 return True

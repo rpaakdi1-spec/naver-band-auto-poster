@@ -33,7 +33,7 @@ class BandPosterGUI:
         login_frame = ttk.LabelFrame(main_frame, text="로그인 정보", padding="10")
         login_frame.grid(row=0, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
         
-        ttk.Label(login_frame, text="네이버 ID:").grid(row=0, column=0, sticky=tk.W)
+        ttk.Label(login_frame, text="밴드 ID (휴대폰/이메일):").grid(row=0, column=0, sticky=tk.W)
         self.id_entry = ttk.Entry(login_frame, width=30)
         self.id_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=5)
         
@@ -253,7 +253,7 @@ class BandPosterGUI:
         
         # 설정 검증
         if not self.poster.config.get('naver_id'):
-            messagebox.showwarning("경고", "네이버 ID를 입력하세요.")
+            messagebox.showwarning("경고", "밴드 ID를 입력하세요.")
             return
         
         if not self.poster.config.get('naver_password'):

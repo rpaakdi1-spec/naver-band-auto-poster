@@ -1,7 +1,10 @@
 {
   "naver_id": "",
+  "_comment_naver_id": "밴드 로그인 ID (휴대폰 번호 또는 이메일)",
   "naver_password": "",
+  "_comment_naver_password": "밴드 로그인 비밀번호",
   "band_url": "https://band.us/band/xxxxx",
+  "_comment_band_url": "포스팅할 밴드 URL",
   "posts": [
     {
       "content": "첫 번째 게시글 내용입니다.",
