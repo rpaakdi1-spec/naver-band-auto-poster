@@ -89,7 +89,9 @@ class BandPoster:
             chrome_options.add_argument('--disable-dev-shm-usage')
             chrome_options.add_argument('--disable-blink-features=AutomationControlled')
             chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
-            chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+            chrome_options.add_argument('--log-level=3')  # 에러 메시지 숨기기 (FATAL만 표시)
+            chrome_options.add_argument('--disable-logging')  # Chrome 로깅 비활성화
+            chrome_options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
             chrome_options.add_experimental_option('useAutomationExtension', False)
             
             # ChromeDriverManager로 드라이버 경로 가져오기
