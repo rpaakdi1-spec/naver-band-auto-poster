@@ -2,3 +2,4 @@ selenium==4.16.0
 webdriver-manager==4.0.1
 schedule==1.2.1
 pyperclip==1.8.2
+pyinstaller==6.3.0

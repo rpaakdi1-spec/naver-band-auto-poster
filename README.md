@@ -17,7 +17,20 @@
 
 ## 🚀 빠른 시작
 
-### 설치
+### 방법 1: 실행 파일 사용 (파이썬 불필요) ⭐
+
+**파이썬 설치 없이** 바로 사용할 수 있습니다!
+
+1. **실행 파일 다운로드**
+   - [Releases](https://github.com/rpaakdi1-spec/naver-band-auto-poster/releases)에서 최신 `.exe` 파일 다운로드
+
+2. **실행**
+   - `네이버밴드자동포스팅.exe` 더블클릭
+   - 설정 후 바로 사용 가능!
+
+### 방법 2: 소스 코드에서 실행
+
+#### 설치
 
 ```bash
 # 저장소 클론
@@ -28,12 +41,25 @@ cd naver-band-auto-poster
 pip install -r requirements.txt
 ```
 
-### 실행
+#### 실행
 
 ```bash
 # GUI 프로그램 실행
 python run.py
 ```
+
+### 방법 3: 직접 .exe 파일 빌드
+
+**Windows에서:**
+```bash
+# 간단한 방법
+build_exe.bat
+
+# 또는 Python 스크립트로
+python build_exe.py
+```
+
+자세한 내용은 [BUILD_EXE_GUIDE.md](BUILD_EXE_GUIDE.md)를 참고하세요.
 
 ## 📖 사용 방법
 
@@ -222,4 +248,10 @@ https://github.com/rpaakdi1-spec/naver-band-auto-poster
 
 ---
 
-**v2.0 업데이트**: 다중 채팅방 지원 추가 🎉
+**v4.1.0 업데이트**: 
+- 🎯 채팅방 별명 및 선택적 포스팅 (체크박스)
+- 📅 날짜+시간 스케줄링 (24시간 자동 설정)
+- ⏱️ 실시간 카운트다운 타이머
+- 🖥️ 좌우 분할 UI 레이아웃
+- 💻 독립 실행 파일 (.exe) 지원
+- 🔧 세션 안정성 개선
