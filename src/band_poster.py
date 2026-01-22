@@ -60,8 +60,6 @@ class BandPoster:
     def _get_default_config(self) -> Dict:
         """기본 설정 반환"""
         return {
-            "naver_id": "",
-            "naver_password": "",
             "band_url": "",
             "posts": [],
             "schedule": {
@@ -127,55 +125,40 @@ class BandPoster:
             self.logger.error(f"Chrome 드라이버 초기화 실패: {str(e)}")
             raise
     
-    def login(self) -> bool:
-        """네이버밴드 로그인"""
+    def start_chrome_and_wait_for_login(self) -> bool:
+        """Chrome 실행하고 수동 로그인 대기"""
         try:
-            self.logger.info("네이버밴드 로그인 시작")
+            self.logger.info("Chrome 브라우저 실행 중...")
             
-            # 네이버밴드 로그인 페이지로 이동
-            self.driver.get("https://auth.band.us/phone_login?keep_login=false")
-            time.sleep(3)
+            # 밴드 URL이 있으면 밴드 페이지로, 없으면 밴드 메인으로
+            if self.config.get('band_url'):
+                self.driver.get(self.config['band_url'])
+            else:
+                self.driver.get("https://band.us")
             
-            # 휴대폰 번호 입력 (또는 이메일)
-            try:
-                phone_input = self.driver.find_element(By.CSS_SELECTOR, "input[type='tel'], input[type='text'], input[name='phone']")
-                phone_input.click()
-                phone_input.send_keys(self.config['naver_id'])
-                time.sleep(0.5)
-            except:
-                self.logger.warning("휴대폰 입력란을 찾을 수 없습니다. 다른 방법 시도 중...")
+            self.logger.info("=" * 60)
+            self.logger.info("🌐 Chrome 브라우저가 실행되었습니다")
+            self.logger.info("📝 수동 로그인을 진행해주세요:")
+            self.logger.info("   1. 열린 Chrome 브라우저에서 밴드에 로그인")
+            self.logger.info("   2. 로그인 완료 후 프로그램으로 돌아와서")
+            self.logger.info("   3. Enter 키를 눌러주세요")
+            self.logger.info("=" * 60)
             
-            # 비밀번호 입력
-            try:
-                pw_input = self.driver.find_element(By.CSS_SELECTOR, "input[type='password']")
-                pw_input.click()
-                pw_input.send_keys(self.config['naver_password'])
-                time.sleep(0.5)
-            except:
-                self.logger.error("비밀번호 입력란을 찾을 수 없습니다")
-                return False
+            # 사용자 입력 대기
+            input("\n✅ 로그인 완료 후 Enter를 눌러주세요...")
             
-            # 로그인 버튼 클릭
-            try:
-                login_btn = self.driver.find_element(By.CSS_SELECTOR, "button[type='submit'], button.submitBtn")
-                login_btn.click()
-            except:
-                self.logger.error("로그인 버튼을 찾을 수 없습니다")
-                return False
-            
-            time.sleep(3)
-            
-            # 로그인 성공 확인
-            if "auth.band.us" not in self.driver.current_url or "band.us" in self.driver.current_url:
+            # 로그인 확인
+            current_url = self.driver.current_url
+            if "band.us" in current_url:
                 self.is_logged_in = True
-                self.logger.info("로그인 성공")
+                self.logger.info("✅ 로그인 확인 완료")
                 return True
             else:
-                self.logger.error("로그인 실패")
-                return False
+                self.logger.warning("⚠️ 밴드 페이지가 아닙니다. 계속 진행합니다...")
+                return True
                 
         except Exception as e:
-            self.logger.error(f"로그인 중 오류: {str(e)}")
+            self.logger.error(f"Chrome 실행 중 오류: {str(e)}")
             return False
     
     def navigate_to_band(self) -> bool:
@@ -297,7 +280,7 @@ class BandPoster:
             
             # 로그인
             if not self.is_logged_in:
-                if not self.login():
+                if not self.start_chrome_and_wait_for_login():
                     self.logger.error("로그인 실패")
                     return False
             

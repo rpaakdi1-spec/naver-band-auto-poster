@@ -29,21 +29,21 @@ class BandPosterGUI:
         main_frame = ttk.Frame(self.root, padding="10")
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
-        # 로그인 정보
-        login_frame = ttk.LabelFrame(main_frame, text="로그인 정보", padding="10")
+        # 밴드 정보
+        login_frame = ttk.LabelFrame(main_frame, text="밴드 정보", padding="10")
         login_frame.grid(row=0, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
         
-        ttk.Label(login_frame, text="밴드 ID (휴대폰/이메일):").grid(row=0, column=0, sticky=tk.W)
-        self.id_entry = ttk.Entry(login_frame, width=30)
-        self.id_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=5)
+        ttk.Label(login_frame, text="밴드 URL:").grid(row=0, column=0, sticky=tk.W)
+        self.url_entry = ttk.Entry(login_frame, width=50)
+        self.url_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=5)
         
-        ttk.Label(login_frame, text="비밀번호:").grid(row=1, column=0, sticky=tk.W)
-        self.pw_entry = ttk.Entry(login_frame, width=30, show="*")
-        self.pw_entry.grid(row=1, column=1, sticky=(tk.W, tk.E), padx=5, pady=5)
-        
-        ttk.Label(login_frame, text="밴드 URL:").grid(row=2, column=0, sticky=tk.W)
-        self.url_entry = ttk.Entry(login_frame, width=30)
-        self.url_entry.grid(row=2, column=1, sticky=(tk.W, tk.E), padx=5)
+        # 안내 메시지
+        info_label = ttk.Label(
+            login_frame, 
+            text="🌐 Chrome이 자동으로 실행되며, 로그인은 브라우저에서 수동으로 진행합니다.",
+            foreground="blue"
+        )
+        info_label.grid(row=1, column=0, columnspan=2, sticky=tk.W, pady=(5, 0))
         
         # 스케줄 설정
         schedule_frame = ttk.LabelFrame(main_frame, text="스케줄 설정", padding="10")
@@ -133,8 +133,8 @@ class BandPosterGUI:
         """설정 로드"""
         config = self.poster.config
         
-        self.id_entry.insert(0, config.get('naver_id', ''))
-        self.pw_entry.insert(0, config.get('naver_password', ''))
+        # 밴드 URL 로드
+        self.url_entry.delete(0, tk.END)
         self.url_entry.insert(0, config.get('band_url', ''))
         
         schedule = config.get('schedule', {})
@@ -161,8 +161,6 @@ class BandPosterGUI:
         
     def save_config(self):
         """설정 저장"""
-        self.poster.config['naver_id'] = self.id_entry.get()
-        self.poster.config['naver_password'] = self.pw_entry.get()
         self.poster.config['band_url'] = self.url_entry.get()
         
         self.poster.config['schedule']['interval_minutes'] = int(self.interval_entry.get())
@@ -251,15 +249,7 @@ class BandPosterGUI:
             messagebox.showwarning("경고", "포스트를 먼저 추가하세요.")
             return
         
-        # 설정 검증
-        if not self.poster.config.get('naver_id'):
-            messagebox.showwarning("경고", "밴드 ID를 입력하세요.")
-            return
-        
-        if not self.poster.config.get('naver_password'):
-            messagebox.showwarning("경고", "비밀번호를 입력하세요.")
-            return
-        
+        # 설정 검증 - 밴드 URL만 확인
         if not self.poster.config.get('band_url'):
             messagebox.showwarning("경고", "밴드 URL을 입력하세요.")
             return
