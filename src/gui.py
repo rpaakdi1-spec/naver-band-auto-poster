@@ -465,21 +465,21 @@ class BandPosterGUI:
         self.status_label.config(text="상태: ▶ 실행 중", foreground="green")
         self.log("▶ 자동 포스팅 시작")
         
+        # 다음 포스팅 시간을 먼저 설정 (카운트다운 표시용)
+        interval = self.poster.config['schedule']['interval_minutes']
+        self.next_post_time = datetime.now() + timedelta(minutes=interval)
+        self.log(f"⏰ 첫 포스팅 후 다음 예정: {self.next_post_time.strftime('%Y-%m-%d %H:%M:%S')}")
+        
         # 즉시 첫 포스팅 실행 (백그라운드)
         def first_post():
             self.log("🚀 첫 포스팅 실행 중...")
             self.poster.run_once()
-            
-            # 다음 포스팅 시간 계산
-            interval = self.poster.config['schedule']['interval_minutes']
-            self.next_post_time = datetime.now() + timedelta(minutes=interval)
             self.log(f"⏰ 다음 포스팅: {self.next_post_time.strftime('%Y-%m-%d %H:%M:%S')}")
         
         # 첫 포스팅을 백그라운드에서 실행
         threading.Thread(target=first_post, daemon=True).start()
         
         # 스케줄 설정
-        interval = self.poster.config['schedule']['interval_minutes']
         schedule.every(interval).minutes.do(self.scheduled_post)
         
         # 스케줄 실행 스레드
