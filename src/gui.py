@@ -251,14 +251,35 @@ class BandPosterGUI:
             messagebox.showwarning("경고", "포스트를 먼저 추가하세요.")
             return
         
+        # 설정 검증
+        if not self.poster.config.get('naver_id'):
+            messagebox.showwarning("경고", "네이버 ID를 입력하세요.")
+            return
+        
+        if not self.poster.config.get('naver_password'):
+            messagebox.showwarning("경고", "비밀번호를 입력하세요.")
+            return
+        
+        if not self.poster.config.get('band_url'):
+            messagebox.showwarning("경고", "밴드 URL을 입력하세요.")
+            return
+        
         self.log("수동 포스팅 시작...")
+        self.status_label.config(text="상태: 포스팅 중...", foreground="orange")
         
         def post_thread():
-            success = self.poster.run_once()
-            if success:
-                self.log("수동 포스팅 완료")
-            else:
-                self.log("수동 포스팅 실패")
+            try:
+                success = self.poster.run_once()
+                if success:
+                    self.log("✅ 수동 포스팅 완료")
+                    self.status_label.config(text="상태: 완료", foreground="green")
+                else:
+                    self.log("❌ 수동 포스팅 실패")
+                    self.status_label.config(text="상태: 실패", foreground="red")
+            except Exception as e:
+                self.log(f"❌ 오류: {str(e)}")
+                self.status_label.config(text="상태: 오류 발생", foreground="red")
+                messagebox.showerror("오류", f"포스팅 중 오류가 발생했습니다:\n\n{str(e)}")
         
         threading.Thread(target=post_thread, daemon=True).start()
 

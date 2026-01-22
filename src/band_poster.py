@@ -3,6 +3,7 @@
 """
 
 import os
+import glob
 import json
 import time
 import random
@@ -84,19 +85,47 @@ class BandPoster:
     
     def init_driver(self):
         """Chrome 드라이버 초기화"""
-        chrome_options = Options()
-        chrome_options.add_argument('--no-sandbox')
-        chrome_options.add_argument('--disable-dev-shm-usage')
-        chrome_options.add_argument('--disable-blink-features=AutomationControlled')
-        chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
-        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-        chrome_options.add_experimental_option('useAutomationExtension', False)
-        
-        service = Service(ChromeDriverManager().install())
-        self.driver = webdriver.Chrome(service=service, options=chrome_options)
-        self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-        
-        self.logger.info("Chrome 드라이버 초기화 완료")
+        try:
+            chrome_options = Options()
+            chrome_options.add_argument('--no-sandbox')
+            chrome_options.add_argument('--disable-dev-shm-usage')
+            chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+            chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
+            chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+            chrome_options.add_experimental_option('useAutomationExtension', False)
+            
+            # ChromeDriverManager로 드라이버 경로 가져오기
+            driver_path = ChromeDriverManager().install()
+            
+            # 올바른 chromedriver.exe 경로 찾기
+            if not driver_path.endswith('.exe'):
+                # 디렉토리에서 chromedriver.exe 찾기
+                import glob
+                driver_dir = os.path.dirname(driver_path)
+                exe_files = glob.glob(os.path.join(driver_dir, '**', 'chromedriver.exe'), recursive=True)
+                
+                if exe_files:
+                    driver_path = exe_files[0]
+                    self.logger.info(f"ChromeDriver 경로: {driver_path}")
+                else:
+                    # 상위 디렉토리에서 찾기
+                    parent_dir = os.path.dirname(driver_dir)
+                    exe_files = glob.glob(os.path.join(parent_dir, '**', 'chromedriver.exe'), recursive=True)
+                    if exe_files:
+                        driver_path = exe_files[0]
+                        self.logger.info(f"ChromeDriver 경로: {driver_path}")
+                    else:
+                        raise FileNotFoundError("chromedriver.exe를 찾을 수 없습니다")
+            
+            service = Service(driver_path)
+            self.driver = webdriver.Chrome(service=service, options=chrome_options)
+            self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+            
+            self.logger.info("Chrome 드라이버 초기화 완료")
+            
+        except Exception as e:
+            self.logger.error(f"Chrome 드라이버 초기화 실패: {str(e)}")
+            raise
     
     def login(self) -> bool:
         """네이버 로그인"""
