@@ -1,9 +1,17 @@
 {
-  "chat_urls": [
-    "https://www.band.us/band/54748329/chat/CevDKF",
-    "https://www.band.us/band/50213411/chat/CiD8Bg"
+  "chat_rooms": [
+    {
+      "name": "메인 채팅방",
+      "url": "https://www.band.us/band/54748329/chat/CevDKF",
+      "enabled": true
+    },
+    {
+      "name": "공지 채팅방",
+      "url": "https://www.band.us/band/50213411/chat/CiD8Bg",
+      "enabled": true
+    }
   ],
-  "_comment_chat_urls": "포스팅할 채팅방 URL 목록",
+  "_comment_chat_rooms": "채팅방 목록 (name: 별명, url: URL, enabled: 활성화 여부)",
   "posts": [
     {
       "content": "첫 번째 게시글 내용입니다.",

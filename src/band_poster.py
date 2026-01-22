@@ -63,7 +63,7 @@ class BandPoster:
     def _get_default_config(self) -> Dict:
         """기본 설정 반환"""
         return {
-            "chat_urls": [],
+            "chat_rooms": [],
             "posts": [],
             "schedule": {
                 "interval_minutes": 30,
@@ -632,44 +632,50 @@ class BandPoster:
         return post['content']
     
     def get_next_chat_url(self) -> Optional[str]:
-        """다음 채팅방 URL 가져오기"""
-        chat_urls = self.config.get('chat_urls', [])
+        """다음 채팅방 URL 가져오기 (활성화된 채팅방만)"""
+        # chat_rooms에서 enabled=True인 채팅방만 필터링
+        chat_rooms = self.config.get('chat_rooms', [])
+        enabled_rooms = [room for room in chat_rooms if room.get('enabled', True)]
         
-        if not chat_urls:
-            self.logger.warning("채팅방 URL이 없습니다")
+        if not enabled_rooms:
+            self.logger.warning("활성화된 채팅방이 없습니다")
             return None
         
         if self.config['settings'].get('rotate_chats', True):
             # 순환 방식
-            url = chat_urls[self.current_chat_index % len(chat_urls)]
+            room = enabled_rooms[self.current_chat_index % len(enabled_rooms)]
             self.current_chat_index += 1
         else:
             # 랜덤 방식
-            url = random.choice(chat_urls)
+            room = random.choice(enabled_rooms)
         
-        return url
+        return room['url']
     
     def post_to_all_chats(self, content: str) -> Dict[str, bool]:
-        """모든 채팅방에 메시지 포스팅"""
+        """모든 활성화된 채팅방에 메시지 포스팅"""
         results = {}
-        chat_urls = self.config.get('chat_urls', [])
+        # 활성화된 채팅방만 필터링
+        chat_rooms = self.config.get('chat_rooms', [])
+        enabled_rooms = [room for room in chat_rooms if room.get('enabled', True)]
         
-        self.logger.info(f"📢 {len(chat_urls)}개 채팅방에 포스팅 시작")
+        self.logger.info(f"📢 {len(enabled_rooms)}개 채팅방에 포스팅 시작")
         
-        for i, chat_url in enumerate(chat_urls, 1):
-            self.logger.info(f"\n[{i}/{len(chat_urls)}] 채팅방 포스팅 중...")
+        for i, room in enumerate(enabled_rooms, 1):
+            chat_url = room['url']
+            chat_name = room.get('name', '이름없음')
+            self.logger.info(f"\n[{i}/{len(enabled_rooms)}] [{chat_name}] 채팅방 포스팅 중...")
             success = self.post_to_chat(chat_url, content)
             results[chat_url] = success
             
             # 마지막 채팅방이 아니면 대기
-            if i < len(chat_urls):
+            if i < len(enabled_rooms):
                 wait_time = self.config['settings'].get('wait_between_chats', 3)
                 self.logger.info(f"⏱️ {wait_time}초 대기 중...")
                 time.sleep(wait_time)
         
         # 결과 요약
         success_count = sum(1 for v in results.values() if v)
-        self.logger.info(f"\n✅ 포스팅 완료: {success_count}/{len(chat_urls)} 성공")
+        self.logger.info(f"\n✅ 포스팅 완료: {success_count}/{len(enabled_rooms)} 성공")
         
         return results
     
