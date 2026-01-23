@@ -91,6 +91,7 @@ class BandPosterGUI:
         post_frame.grid(row=1, column=1, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5, padx=(5, 0))
         
         ttk.Label(post_frame, text="포스트 내용:").grid(row=0, column=0, sticky=tk.W)
+        ttk.Label(post_frame, text="(엔터키로 줄바꿈 가능)", font=("맑은 고딕", 8), foreground="gray").grid(row=0, column=0, sticky=tk.E)
         
         self.post_text = scrolledtext.ScrolledText(post_frame, width=50, height=5)
         self.post_text.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=5)
@@ -438,12 +439,17 @@ class BandPosterGUI:
             'enabled': True
         })
         
-        # 리스트박스에 추가
-        display_content = content[:50] + "..." if len(content) > 50 else content
+        # 리스트박스에 추가 (줄바꿈을 \\n으로 표시)
+        display_content = content.replace('\n', '\\n')  # 줄바꿈을 \\n으로 표시
+        if len(display_content) > 80:
+            display_content = display_content[:80] + "..."
         self.post_listbox.insert(tk.END, f"✓ {display_content}")
         
         self.post_text.delete("1.0", tk.END)
-        self.log(f"✅ 포스트 추가: {display_content}")
+        
+        # 로그에는 줄바꿈 유지
+        log_preview = content[:50] + "..." if len(content) > 50 else content
+        self.log(f"✅ 포스트 추가: {log_preview}")
         
     def remove_post(self):
         """포스트 삭제"""

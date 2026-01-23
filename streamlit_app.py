@@ -294,7 +294,12 @@ with col2:
     st.header("📝 포스트 관리")
     
     with st.form("add_post_form"):
-        post_content = st.text_area("포스트 내용", height=100, placeholder="포스팅할 내용을 입력하세요...")
+        post_content = st.text_area(
+            "포스트 내용",
+            height=150,
+            placeholder="포스팅할 내용을 입력하세요...\n\n💡 팁: 여러 줄 입력 가능합니다. 엔터키로 줄바꿈하세요!",
+            help="여러 줄 입력이 가능합니다. 입력이 끝나면 아래 [✚ 추가] 버튼을 클릭하세요."
+        )
         
         col_a, col_b = st.columns([1, 1])
         with col_a:
@@ -329,8 +334,18 @@ with col2:
             
             with col_info:
                 content = post.get('content', '')
-                display = content[:50] + "..." if len(content) > 50 else content
-                st.text(display)
+                # 줄바꿈 유지하여 표시 (최대 3줄)
+                lines = content.split('\n')
+                if len(lines) > 3 or len(content) > 100:
+                    preview_lines = lines[:3]
+                    preview = '\n'.join(preview_lines)
+                    if len(preview) > 100:
+                        preview = preview[:100] + "..."
+                    elif len(lines) > 3:
+                        preview = preview + "\n..."
+                    st.text(preview)
+                else:
+                    st.text(content)
             
             with col_del:
                 if st.button("🗑", key=f"del_post_{idx}"):
