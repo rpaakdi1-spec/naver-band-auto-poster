@@ -465,34 +465,66 @@ class BandPosterGUI:
         self.status_label.config(text="상태: ▶ 실행 중", foreground="green")
         self.log("▶ 자동 포스팅 시작")
         
-        # 다음 포스팅 시간을 먼저 설정 (카운트다운 표시용)
+        # 스케줄 초기화 (이전 스케줄 제거)
+        schedule.clear()
+        
+        # 간격 설정
         interval = self.poster.config['schedule']['interval_minutes']
+        
+        # 다음 포스팅 시간을 먼저 설정 (카운트다운 표시용)
         self.next_post_time = datetime.now() + timedelta(minutes=interval)
         self.log(f"⏰ 첫 포스팅 후 다음 예정: {self.next_post_time.strftime('%Y-%m-%d %H:%M:%S')}")
         
         # 즉시 첫 포스팅 실행 (백그라운드)
         def first_post():
             self.log("🚀 첫 포스팅 실행 중...")
-            self.poster.run_once()
+            try:
+                success = self.poster.run_once()
+                if success:
+                    self.log(f"✅ 첫 포스팅 완료")
+                else:
+                    self.log(f"❌ 첫 포스팅 실패")
+            except Exception as e:
+                self.log(f"❌ 첫 포스팅 오류: {str(e)}")
+            
+            # 다음 포스팅 시간 재계산
+            self.next_post_time = datetime.now() + timedelta(minutes=interval)
             self.log(f"⏰ 다음 포스팅: {self.next_post_time.strftime('%Y-%m-%d %H:%M:%S')}")
         
         # 첫 포스팅을 백그라운드에서 실행
         threading.Thread(target=first_post, daemon=True).start()
         
-        # 스케줄 설정
+        # 스케줄 설정 (interval 분마다 실행)
         schedule.every(interval).minutes.do(self.scheduled_post)
+        self.log(f"📅 스케줄 설정 완료: {interval}분마다 포스팅")
         
-        # 스케줄 실행 스레드
-        self.schedule_thread = threading.Thread(target=self.run_schedule, daemon=True)
-        self.schedule_thread.start()
+        # 스케줄 실행 스레드 (기존 스레드가 없을 때만 시작)
+        if not self.schedule_thread or not self.schedule_thread.is_alive():
+            self.schedule_thread = threading.Thread(target=self.run_schedule, daemon=True)
+            self.schedule_thread.start()
+            self.log("⚙️ 스케줄 실행 스레드 시작")
         
     def scheduled_post(self):
         """스케줄된 포스팅 실행"""
-        self.poster.run_once()
+        if not self.is_running:
+            self.log("⚠️ 중지됨 - 스케줄 포스팅 건너뜀")
+            return
+        
+        self.log("📅 스케줄 포스팅 시작...")
+        
+        try:
+            success = self.poster.run_once()
+            if success:
+                self.log("✅ 스케줄 포스팅 완료")
+            else:
+                self.log("❌ 스케줄 포스팅 실패")
+        except Exception as e:
+            self.log(f"❌ 스케줄 포스팅 오류: {str(e)}")
         
         # 다음 포스팅 시간 계산
         interval = self.poster.config['schedule']['interval_minutes']
         self.next_post_time = datetime.now() + timedelta(minutes=interval)
+        self.log(f"⏰ 다음 포스팅 예정: {self.next_post_time.strftime('%Y-%m-%d %H:%M:%S')}")
         
     def run_schedule(self):
         """스케줄 실행"""
