@@ -37,30 +37,59 @@
 
 ### 방법 1: 웹 버전 🌐 (가장 추천!)
 
-**브라우저에서 바로 사용!**
+**브라우저에서 바로 사용! - 30초 안에 시작하기**
+
+#### ⚡ 빠른 실행
+
+<details>
+<summary><b>Windows 사용자 (클릭하여 펼치기)</b></summary>
 
 ```bash
-# 저장소 클론
+# 1단계: 다운로드
 git clone https://github.com/rpaakdi1-spec/naver-band-auto-poster.git
 cd naver-band-auto-poster
 
-# 패키지 설치
-pip install -r requirements.txt
-
-# 웹 버전 실행
-run_web.bat         # Windows
-python run_web.py   # Mac/Linux
+# 2단계: 실행 (더블클릭만 하면 됨!)
+run_web.bat
 ```
 
-브라우저에서 자동으로 열립니다: `http://localhost:8501`
+그게 전부입니다! 브라우저가 자동으로 열립니다. 🎉
 
-**장점:**
+</details>
+
+<details>
+<summary><b>Mac/Linux 사용자 (클릭하여 펼치기)</b></summary>
+
+```bash
+# 1단계: 다운로드
+git clone https://github.com/rpaakdi1-spec/naver-band-auto-poster.git
+cd naver-band-auto-poster
+
+# 2단계: 실행
+python3 run_web.py
+```
+
+브라우저가 자동으로 열립니다! 🎉
+
+</details>
+
+#### 📍 접속 주소
+
+- **로컬**: http://localhost:8501
+- **네트워크**: http://192.168.x.x:8501 (같은 Wi-Fi의 다른 기기에서)
+
+#### ✨ 장점
+
 - ✅ 모든 OS 지원 (Windows, Mac, Linux)
 - ✅ 모던한 웹 UI
 - ✅ 실시간 자동 업데이트 (1초마다)
 - ✅ 모바일/네트워크 접속 가능
+- ✅ Python만 있으면 OK (패키지는 자동 설치)
 
-📖 [웹 버전 상세 가이드](WEB_VERSION_GUIDE.md)
+#### 📖 더 자세한 안내
+
+- 🚀 [30초 빠른 시작](WEB_QUICK_START.md) - **초보자 추천!**
+- 📚 [웹 버전 상세 가이드](WEB_VERSION_GUIDE.md)
 
 ---
 
