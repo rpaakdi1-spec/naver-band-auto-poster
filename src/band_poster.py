@@ -653,11 +653,19 @@ class BandPoster:
             input_element.click()
             time.sleep(0.5)
             
-            # 메시지 입력
-            input_element.send_keys(content)
+            # 메시지 입력 (줄바꿀8을 Shift+Enter로 변환)
+            # 문제: 일부 채팅 시스템에서 \n이 Enter로 해석되어 중복 전송됨
+            # 해결: \n을 Shift+Enter로 대체하여 줄바꿀8만 하고 전송하지 않음
+            lines = content.split('\n')
+            for i, line in enumerate(lines):
+                input_element.send_keys(line)
+                if i < len(lines) - 1:  # 마지막 줄이 아니면
+                    # Shift+Enter로 줄바꿀8 (전송하지 않음)
+                    input_element.send_keys(Keys.SHIFT, Keys.RETURN)
+            
             time.sleep(0.5)
             
-            # Enter 키로 전송
+            # Enter 키로 전송 (1번만)
             self.logger.info("⌨️ Enter 키로 메시지 전송")
             input_element.send_keys(Keys.RETURN)
             
