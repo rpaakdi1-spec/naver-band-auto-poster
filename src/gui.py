@@ -107,12 +107,25 @@ class BandPosterGUI:
         post_list_frame = ttk.Frame(post_frame)
         post_list_frame.grid(row=4, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
-        self.post_listbox = tk.Listbox(post_list_frame, height=20)
-        self.post_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        # 포스트 목록용 캔버스와 스크롤바
+        post_canvas = tk.Canvas(post_list_frame, height=300)
+        post_scrollbar = ttk.Scrollbar(post_list_frame, orient=tk.VERTICAL, command=post_canvas.yview)
         
-        post_scrollbar = ttk.Scrollbar(post_list_frame, orient=tk.VERTICAL, command=self.post_listbox.yview)
+        self.post_checkboxes_frame = ttk.Frame(post_canvas)
+        self.post_checkboxes_frame.bind(
+            "<Configure>",
+            lambda e: post_canvas.configure(scrollregion=post_canvas.bbox("all"))
+        )
+        
+        post_canvas.create_window((0, 0), window=self.post_checkboxes_frame, anchor="nw")
+        post_canvas.configure(yscrollcommand=post_scrollbar.set)
+        
+        post_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         post_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        self.post_listbox.config(yscrollcommand=post_scrollbar.set)
+        
+        # 포스트 위젯 추적 리스트
+        self.post_widgets = []
+        self.post_check_vars = []
         
         post_frame.columnconfigure(0, weight=1)
         post_frame.rowconfigure(4, weight=1)
@@ -280,6 +293,67 @@ class BandPosterGUI:
         self.log_text.see(tk.END)
         self.log_text.config(state=tk.DISABLED)
         
+    def refresh_post_list(self):
+        """포스트 목록 UI 새로고침"""
+        # 기존 위젯 제거
+        for widget in self.post_widgets:
+            widget.destroy()
+        self.post_widgets.clear()
+        self.post_check_vars.clear()
+        
+        # 포스트 목록 다시 그리기
+        posts = self.poster.config.get('posts', [])
+        for i, post in enumerate(posts):
+            frame = ttk.Frame(self.post_checkboxes_frame)
+            frame.pack(fill=tk.X, padx=5, pady=2)
+            
+            var = tk.BooleanVar(value=post.get('enabled', True))
+            self.post_check_vars.append(var)
+            
+            # 체크박스와 내용 표시
+            checkbox = ttk.Checkbutton(
+                frame, 
+                variable=var,
+                command=lambda idx=i: self.toggle_post(idx)
+            )
+            checkbox.pack(side=tk.LEFT)
+            
+            # 포스트 내용 표시 (줄바꿈을 \\n으로 표시)
+            content = post['content']
+            display_content = content.replace('\n', '\\n')
+            if len(display_content) > 80:
+                display_content = display_content[:80] + "..."
+            
+            label = ttk.Label(frame, text=display_content)
+            label.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
+            
+            # 개별 삭제 버튼
+            delete_btn = ttk.Button(
+                frame,
+                text="🗑",
+                width=3,
+                command=lambda idx=i: self.delete_single_post(idx)
+            )
+            delete_btn.pack(side=tk.RIGHT)
+            
+            self.post_widgets.extend([frame, checkbox, label, delete_btn])
+    
+    def toggle_post(self, index):
+        """포스트 활성/비활성 토글"""
+        if index < len(self.poster.config['posts']):
+            enabled = self.post_check_vars[index].get()
+            self.poster.config['posts'][index]['enabled'] = enabled
+            status = "활성화" if enabled else "비활성화"
+            self.log(f"{'✅' if enabled else '⏸'} 포스트 {status}: 인덱스 {index}")
+    
+    def delete_single_post(self, index):
+        """개별 포스트 삭제"""
+        if index < len(self.poster.config['posts']):
+            content_preview = self.poster.config['posts'][index]['content'][:30]
+            self.poster.config['posts'].pop(index)
+            self.log(f"🗑 포스트 삭제: {content_preview}...")
+            self.refresh_post_list()
+    
     def refresh_chat_list(self):
         """채팅방 목록 UI 새로고침"""
         # 기존 위젯 제거
@@ -439,29 +513,34 @@ class BandPosterGUI:
             'enabled': True
         })
         
-        # 리스트박스에 추가 (줄바꿈을 \\n으로 표시)
-        display_content = content.replace('\n', '\\n')  # 줄바꿈을 \\n으로 표시
-        if len(display_content) > 80:
-            display_content = display_content[:80] + "..."
-        self.post_listbox.insert(tk.END, f"✓ {display_content}")
-        
         self.post_text.delete("1.0", tk.END)
+        
+        # 포스트 목록 새로고침
+        self.refresh_post_list()
         
         # 로그에는 줄바꿈 유지
         log_preview = content[:50] + "..." if len(content) > 50 else content
         self.log(f"✅ 포스트 추가: {log_preview}")
         
     def remove_post(self):
-        """포스트 삭제"""
-        selection = self.post_listbox.curselection()
-        if not selection:
-            messagebox.showwarning("경고", "삭제할 포스트를 선택하세요.")
+        """선택된 포스트 삭제"""
+        # 체크된 포스트들 찾기
+        selected_indices = []
+        for i, var in enumerate(self.post_check_vars):
+            if var.get():
+                selected_indices.append(i)
+        
+        if not selected_indices:
+            messagebox.showwarning("경고", "삭제할 포스트를 체크하세요.")
             return
         
-        index = selection[0]
-        self.poster.config['posts'].pop(index)
-        self.post_listbox.delete(index)
-        self.log(f"🗑 포스트 삭제: 인덱스 {index}")
+        # 역순으로 삭제 (인덱스 변경 방지)
+        for index in reversed(selected_indices):
+            self.poster.config['posts'].pop(index)
+            self.log(f"🗑 포스트 삭제: 인덱스 {index}")
+        
+        # 포스트 목록 새로고침
+        self.refresh_post_list()
         
     def start_posting(self):
         """자동 포스팅 시작"""
@@ -686,11 +765,7 @@ class BandPosterGUI:
         self.refresh_chat_list()
         
         # 포스트 로드
-        for post in config['posts']:
-            if post.get('enabled', True):
-                content = post['content']
-                display_content = content[:50] + "..." if len(content) > 50 else content
-                self.post_listbox.insert(tk.END, f"✓ {display_content}")
+        self.refresh_post_list()
         
         self.log("📂 설정 로드 완료")
 
