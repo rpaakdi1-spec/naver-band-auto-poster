@@ -700,24 +700,47 @@ class BandPoster:
         chat_rooms = self.config.get('chat_rooms', [])
         enabled_rooms = [room for room in chat_rooms if room.get('enabled', True)]
         
+        # 상세 로그
+        self.logger.info(f"=" * 60)
+        self.logger.info(f"📊 채팅방 포스팅 정보:")
+        self.logger.info(f"   총 등록된 채팅방: {len(chat_rooms)}개")
+        self.logger.info(f"   활성화된 채팅방: {len(enabled_rooms)}개")
+        self.logger.info(f"   비활성화된 채팅방: {len(chat_rooms) - len(enabled_rooms)}개")
+        self.logger.info(f"=" * 60)
+        
+        # 활성화된 채팅방 목록 출력
+        for i, room in enumerate(enabled_rooms, 1):
+            self.logger.info(f"   {i}. [{room.get('name', '이름없음')}]")
+            self.logger.info(f"      URL: {room['url'][:50]}...")
+        
+        self.logger.info(f"=" * 60)
         self.logger.info(f"📢 {len(enabled_rooms)}개 채팅방에 포스팅 시작")
+        self.logger.info(f"=" * 60)
         
         for i, room in enumerate(enabled_rooms, 1):
             chat_url = room['url']
             chat_name = room.get('name', '이름없음')
             self.logger.info(f"\n[{i}/{len(enabled_rooms)}] [{chat_name}] 채팅방 포스팅 중...")
+            self.logger.info(f"   URL: {chat_url}")
             success = self.post_to_chat(chat_url, content)
             results[chat_url] = success
+            
+            if success:
+                self.logger.info(f"   ✅ [{chat_name}] 포스팅 성공")
+            else:
+                self.logger.error(f"   ❌ [{chat_name}] 포스팅 실패")
             
             # 마지막 채팅방이 아니면 대기
             if i < len(enabled_rooms):
                 wait_time = self.config['settings'].get('wait_between_chats', 3)
-                self.logger.info(f"⏱️ {wait_time}초 대기 중...")
+                self.logger.info(f"   ⏱️ {wait_time}초 대기 중...")
                 time.sleep(wait_time)
         
         # 결과 요약
         success_count = sum(1 for v in results.values() if v)
-        self.logger.info(f"\n✅ 포스팅 완료: {success_count}/{len(enabled_rooms)} 성공")
+        self.logger.info(f"\n" + "=" * 60)
+        self.logger.info(f"✅ 포스팅 완료: {success_count}/{len(enabled_rooms)} 성공")
+        self.logger.info(f"=" * 60)
         
         return results
     
