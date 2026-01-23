@@ -129,6 +129,14 @@ build_exe_fixed.bat
 
 - 📖 [빌드 가이드](BUILD_EXE_GUIDE.md)
 - 🔧 [문제 해결](BUILD_TROUBLESHOOTING.md)
+- 🛡️ [백신 오탐 해결](FALSE_POSITIVE_GUIDE.md) - **백신 경고 시 필독!**
+
+#### ⚠️ 백신 오탐 주의
+
+PyInstaller로 만든 .exe 파일은 일부 백신 프로그램에서 오탐지될 수 있습니다.
+- **이것은 정상입니다!** 악성코드가 아닙니다.
+- **해결 방법**: [백신 오탐 가이드](FALSE_POSITIVE_GUIDE.md) 참조
+- **대안**: 소스 코드로 직접 실행 (방법 1 또는 방법 3)
 
 ---
 
