@@ -58,7 +58,25 @@ class BandPoster:
             return self._get_default_config()
         
         with open(self.config_path, 'r', encoding='utf-8') as f:
-            return json.load(f)
+            config = json.load(f)
+        
+        # 중복 URL 제거 (기존 데이터 정리)
+        if 'chat_rooms' in config:
+            seen_urls = set()
+            unique_rooms = []
+            for room in config['chat_rooms']:
+                url = room.get('url')
+                if url and url not in seen_urls:
+                    seen_urls.add(url)
+                    unique_rooms.append(room)
+                elif url in seen_urls:
+                    self.logger.warning(f"⚠️ 중복 URL 제거: {room.get('name', '알 수 없음')} - {url}")
+            
+            if len(unique_rooms) < len(config['chat_rooms']):
+                config['chat_rooms'] = unique_rooms
+                self.logger.info(f"✅ 중복 URL {len(config['chat_rooms']) - len(unique_rooms)}개 제거 완료")
+        
+        return config
     
     def _get_default_config(self) -> Dict:
         """기본 설정 반환"""

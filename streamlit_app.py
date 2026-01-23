@@ -42,6 +42,14 @@ def add_chat_room(name, url):
         st.warning("⚠️ 올바른 URL을 입력하세요. (https://로 시작)")
         return False
     
+    # 중복 URL 체크
+    existing_rooms = st.session_state.poster.config.get('chat_rooms', [])
+    for room in existing_rooms:
+        if room.get('url') == url:
+            st.error(f"⚠️ 이미 등록된 채팅방 URL입니다.\n\n채팅방: **{room.get('name', '알 수 없음')}**\n\nURL: {url}")
+            log_message(f"⚠️ 중복 등록 시도: {url} (이미 등록된 채팅방: {room.get('name', '알 수 없음')})")
+            return False
+    
     if not name:
         name = f"채팅방{len(st.session_state.poster.config.get('chat_rooms', [])) + 1}"
     

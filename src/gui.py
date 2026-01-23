@@ -340,6 +340,17 @@ class BandPosterGUI:
             messagebox.showwarning("경고", "올바른 URL을 입력하세요. (https://로 시작)")
             return
         
+        # 중복 URL 체크
+        existing_rooms = self.poster.config.get('chat_rooms', [])
+        for room in existing_rooms:
+            if room.get('url') == url:
+                messagebox.showwarning(
+                    "중복 등록", 
+                    f"⚠️ 이미 등록된 채팅방 URL입니다.\n\n채팅방: {room.get('name', '알 수 없음')}\nURL: {url}"
+                )
+                self.log(f"⚠️ 중복 등록 시도: {url} (이미 등록된 채팅방: {room.get('name', '알 수 없음')})")
+                return
+        
         if not name:
             name = f"채팅방{len(self.poster.config.get('chat_rooms', [])) + 1}"
         
