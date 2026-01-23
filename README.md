@@ -93,22 +93,42 @@ python3 run_web.py
 
 ---
 
-### 방법 2: .exe 파일 💻 (Python 불필요)
+### 방법 2: .exe 파일 💻 (직접 빌드)
 
-**파이썬 설치 없이** 바로 사용!
+**Windows에서 파이썬 설치 없이 실행 가능한 .exe 파일 만들기**
 
-1. **다운로드**
-   - [Releases](https://github.com/rpaakdi1-spec/naver-band-auto-poster/releases)에서 최신 `.exe` 다운로드
+> ⚠️ **참고**: 현재 릴리스에 .exe 파일이 없습니다. 아래 방법으로 직접 빌드하세요.
 
-2. **실행**
-   - `네이버밴드자동포스팅.exe` 더블클릭
+#### 🛠️ 빌드 방법 (Windows PC 필요)
 
-**장점:**
-- ✅ Python 설치 불필요
+```bash
+# 1. 저장소 다운로드
+git clone https://github.com/rpaakdi1-spec/naver-band-auto-poster.git
+cd naver-band-auto-poster
+
+# 2. 빌드 실행 (더블클릭 또는 명령 프롬프트)
+build_exe_fixed.bat
+```
+
+#### 📦 빌드 결과
+
+- `dist/BandAutoPoster.exe` (약 50-70 MB)
+- `dist/네이버밴드자동포스팅.exe` (한글 이름 복사본)
+
+#### 💡 .exe 없이도 사용 가능!
+
+**Python이 설치되어 있다면** 위의 **방법 1 (웹 버전)** 또는 **방법 3 (데스크톱 GUI)**를 사용하세요!
+
+#### ✨ 장점
+
+- ✅ Python 설치 불필요 (빌드 후)
 - ✅ 단일 파일로 실행
-- ✅ 배포 편리
+- ✅ 다른 PC에 배포 가능
 
-📖 [빌드 가이드](BUILD_EXE_GUIDE.md) | [문제 해결](BUILD_TROUBLESHOOTING.md)
+#### 📖 자세한 안내
+
+- 📖 [빌드 가이드](BUILD_EXE_GUIDE.md)
+- 🔧 [문제 해결](BUILD_TROUBLESHOOTING.md)
 
 ---
 
