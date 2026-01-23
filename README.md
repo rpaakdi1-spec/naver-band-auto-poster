@@ -107,23 +107,30 @@ python3 run_web.py
 git clone https://github.com/rpaakdi1-spec/naver-band-auto-poster.git
 cd naver-band-auto-poster
 
-# 2. 빌드 실행 (더블클릭 또는 명령 프롬프트)
-build_exe_fixed.bat
+# 2. 빌드 실행 (권장 - 더블클릭 또는 명령 프롬프트)
+build_exe_ultimate.bat
 
-# 또는 Python 스크립트로 실행
+# 또는 간단 버전
+build_exe_simple.bat
+
+# 또는 Python 스크립트
 python build_exe_fixed.py
 ```
 
 **특징:**
-- ✅ 자동 환경 체크 (OS, Python 버전, 필수 파일)
-- ✅ 의존성 자동 설치 (누락된 패키지 자동 감지)
-- ✅ 상세한 진행 상황 표시
-- ✅ 빌드 결과 검증 (파일 생성 확인, 크기 체크)
-- ✅ 상세한 오류 메시지 및 해결 방법 제시
+- ✅ **8단계 자동 검증** (환경, 파일, 의존성, 빌드, 검증)
+- ✅ **누락된 패키지 자동 설치**
+- ✅ **src 폴더 포함** (중요!)
+- ✅ **PIL 서브모듈 포함** (PIL.Image, PIL.ImageTk)
+- ✅ **selenium 서브모듈 완전 포함**
+- ✅ **한글 이름 안전 처리** (영문 빌드 후 복사)
+- ✅ **빌드 로그 자동 생성**
+- ✅ **상세한 오류 메시지 및 해결 방법**
 
 #### 📦 빌드 결과
 
-- `dist/네이버밴드자동포스팅.exe` (약 80-120 MB)
+- `dist/BandAutoPoster.exe` (약 80-120 MB)
+- `dist/네이버밴드자동포스팅.exe` (한글 이름 복사본)
 - 실행 가능한 단일 파일
 
 #### 💡 .exe 없이도 사용 가능!
@@ -138,9 +145,10 @@ python build_exe_fixed.py
 
 #### 📖 자세한 안내
 
-- 📖 [build_exe.py 실행 가이드](BUILD_EXE_PY_GUIDE.md) - **빌드 방법 상세 안내**
-- 🔧 [.exe 생성 문제 해결](EXE_BUILD_TROUBLESHOOTING.md) - **.exe 파일 생성 안될 때 필독!**
-- 🛡️ [백신 오탐 해결](ANTIVIRUS_FALSE_POSITIVE.md) - **백신 경고 시 필독!**
+- 🔧 [.exe 생성 안됨 해결](EXE_NOT_GENERATED_FIX.md) - **.exe 파일 생성 안될 때 필독!** ⭐
+- 📖 [빌드 가이드](BUILD_EXE_PY_GUIDE.md) - 빌드 방법 상세 안내
+- 🔧 [문제 해결](EXE_BUILD_TROUBLESHOOTING.md) - 빌드 문제 해결
+- 🛡️ [백신 오탐 해결](ANTIVIRUS_FALSE_POSITIVE.md) - 백신 경고 시 필독!
 
 #### ⚠️ 백신 오탐 주의
 
