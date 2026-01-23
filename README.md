@@ -18,9 +18,24 @@
 - 🎲 **랜덤 딜레이**: 자연스러운 포스팅을 위한 랜덤 딜레이
 - 📊 **로깅**: 모든 활동 로그 기록
 
-## 🚀 빠른 시작
+## 🚀 빠른 시작 - 3가지 방법
 
-### 방법 1: 웹 버전 (가장 간단!) 🌐 ⭐
+> **💡 어떤 방법을 선택할까?** [3_WAYS_GUIDE.md](3_WAYS_GUIDE.md)에서 상세 비교를 확인하세요!
+
+### 🆚 3가지 방법 비교
+
+| 특징 | 웹 버전 🌐 | .exe 파일 💻 | 데스크톱 GUI 🖥️ |
+|------|-----------|-------------|----------------|
+| **OS** | Win/Mac/Linux | Windows만 | Windows |
+| **설치** | Streamlit | 불필요 | Python |
+| **UI** | 모던 웹 | 전통 | 전통 |
+| **모바일** | ✅ | ❌ | ❌ |
+| **자동새로고침** | ✅ | ❌ | ❌ |
+| **추천** | ⭐⭐⭐ | ⭐⭐ | ⭐ |
+
+---
+
+### 방법 1: 웹 버전 🌐 (가장 추천!)
 
 **브라우저에서 바로 사용!**
 
@@ -34,23 +49,43 @@ pip install -r requirements.txt
 
 # 웹 버전 실행
 run_web.bat         # Windows
-python run_web.py   # 모든 OS
+python run_web.py   # Mac/Linux
 ```
 
 브라우저에서 자동으로 열립니다: `http://localhost:8501`
 
-### 방법 2: 실행 파일 사용 (Windows, 파이썬 불필요)
+**장점:**
+- ✅ 모든 OS 지원 (Windows, Mac, Linux)
+- ✅ 모던한 웹 UI
+- ✅ 실시간 자동 업데이트 (1초마다)
+- ✅ 모바일/네트워크 접속 가능
 
-**파이썬 설치 없이** 바로 사용할 수 있습니다!
+📖 [웹 버전 상세 가이드](WEB_VERSION_GUIDE.md)
 
-1. **실행 파일 다운로드**
-   - [Releases](https://github.com/rpaakdi1-spec/naver-band-auto-poster/releases)에서 최신 `.exe` 파일 다운로드
+---
+
+### 방법 2: .exe 파일 💻 (Python 불필요)
+
+**파이썬 설치 없이** 바로 사용!
+
+1. **다운로드**
+   - [Releases](https://github.com/rpaakdi1-spec/naver-band-auto-poster/releases)에서 최신 `.exe` 다운로드
 
 2. **실행**
    - `네이버밴드자동포스팅.exe` 더블클릭
-   - 설정 후 바로 사용 가능!
 
-### 방법 3: 데스크톱 GUI 실행
+**장점:**
+- ✅ Python 설치 불필요
+- ✅ 단일 파일로 실행
+- ✅ 배포 편리
+
+📖 [빌드 가이드](BUILD_EXE_GUIDE.md) | [문제 해결](BUILD_TROUBLESHOOTING.md)
+
+---
+
+### 방법 3: 데스크톱 GUI 🖥️
+
+**전통적인 데스크톱 애플리케이션**
 
 ```bash
 # 저장소 클론
@@ -64,18 +99,9 @@ pip install -r requirements.txt
 python run.py
 ```
 
-### 방법 3: 직접 .exe 파일 빌드
-
-**Windows에서:**
-```bash
-# 간단한 방법
-build_exe.bat
-
-# 또는 Python 스크립트로
-python build_exe.py
-```
-
-자세한 내용은 [BUILD_EXE_GUIDE.md](BUILD_EXE_GUIDE.md)를 참고하세요.
+**장점:**
+- ✅ 친숙한 데스크톱 UI
+- ✅ 빠른 시작
 
 ## 📖 사용 방법
 
