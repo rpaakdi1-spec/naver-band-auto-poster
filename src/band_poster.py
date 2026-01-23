@@ -137,8 +137,12 @@ class BandPoster:
             self.logger.error(f"Chrome 드라이버 초기화 실패: {str(e)}")
             raise
     
-    def start_chrome_and_wait_for_login(self) -> bool:
-        """Chrome 실행하고 수동 로그인 대기"""
+    def start_chrome_and_wait_for_login(self, use_gui: bool = True) -> bool:
+        """Chrome 실행하고 수동 로그인 대기
+        
+        Args:
+            use_gui: True이면 GUI 다이얼로그 사용, False이면 콘솔 입력 사용
+        """
         try:
             self.logger.info("Chrome 브라우저 실행 중...")
             
@@ -150,11 +154,48 @@ class BandPoster:
             self.logger.info("📝 수동 로그인을 진행해주세요:")
             self.logger.info("   1. 열린 Chrome 브라우저에서 밴드에 로그인")
             self.logger.info("   2. 로그인 완료 후 프로그램으로 돌아와서")
-            self.logger.info("   3. Enter 키를 눌러주세요")
+            if use_gui:
+                self.logger.info("   3. '로그인 완료' 버튼을 클릭하세요")
+            else:
+                self.logger.info("   3. Enter 키를 눌러주세요")
             self.logger.info("=" * 60)
             
-            # 사용자 입력 대기
-            input("\n✅ 로그인 완료 후 Enter를 눌러주세요...")
+            if use_gui:
+                # GUI 다이얼로그 사용 (Tkinter)
+                try:
+                    import tkinter as tk
+                    from tkinter import messagebox
+                    
+                    # 숨겨진 루트 윈도우 생성
+                    root = tk.Tk()
+                    root.withdraw()
+                    root.attributes('-topmost', True)
+                    
+                    # 메시지박스 표시
+                    result = messagebox.askokcancel(
+                        "밴드 로그인",
+                        "🌐 Chrome 브라우저가 열렸습니다.\n\n"
+                        "📝 다음 단계를 진행하세요:\n\n"
+                        "1. Chrome 브라우저에서 밴드 로그인\n"
+                        "2. 로그인 완료 후 이 창에서\n"
+                        "3. [확인] 버튼 클릭\n\n"
+                        "⚠️ 로그인을 완료했나요?",
+                        icon='info'
+                    )
+                    
+                    root.destroy()
+                    
+                    if not result:
+                        self.logger.warning("⚠️ 사용자가 취소했습니다")
+                        return False
+                        
+                except ImportError:
+                    self.logger.warning("⚠️ Tkinter를 사용할 수 없습니다. 콘솔 입력으로 전환합니다.")
+                    # Tkinter 없으면 콘솔 입력으로 대체
+                    input("\n✅ 로그인 완료 후 Enter를 눌러주세요...")
+            else:
+                # 콘솔 입력 대기
+                input("\n✅ 로그인 완료 후 Enter를 눌러주세요...")
             
             # 로그인 확인
             current_url = self.driver.current_url
