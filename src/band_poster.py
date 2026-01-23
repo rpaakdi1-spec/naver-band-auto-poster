@@ -71,8 +71,8 @@ class BandPoster:
             "chat_rooms": [],
             "posts": [],
             "schedule": {
-                "interval_minutes": 30,
-                "random_delay_minutes": 5,
+                "interval_minutes": 4,
+                "random_delay_minutes": 3,
                 "start_datetime": start_datetime,
                 "end_datetime": end_datetime
             },

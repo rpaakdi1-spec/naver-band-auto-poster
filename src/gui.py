@@ -123,12 +123,12 @@ class BandPosterGUI:
         ttk.Label(schedule_frame, text="포스팅 간격(분):").grid(row=0, column=0, sticky=tk.W)
         self.interval_entry = ttk.Entry(schedule_frame, width=15)
         self.interval_entry.grid(row=0, column=1, sticky=tk.W, padx=5)
-        self.interval_entry.insert(0, "30")
+        self.interval_entry.insert(0, "4")
         
         ttk.Label(schedule_frame, text="랜덤 딜레이(분):").grid(row=0, column=2, sticky=tk.W, padx=(20, 0))
         self.delay_entry = ttk.Entry(schedule_frame, width=15)
         self.delay_entry.grid(row=0, column=3, sticky=tk.W, padx=5)
-        self.delay_entry.insert(0, "5")
+        self.delay_entry.insert(0, "3")
         
         ttk.Label(schedule_frame, text="시작 일시:").grid(row=1, column=0, sticky=tk.W, pady=5)
         
